@@ -3,6 +3,27 @@
 #include <tf2/buffer_core.h>
 #include <tf2/exceptions.h>
 
+tf2::TimePoint chrono_from_rostime(const ros::Time& time)
+{
+  return tf2::TimePoint(std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec));
+}
+
+tf2::TimePoint chrono_from_double(double time)
+{
+  ros::Time tmp;
+  tmp.fromSec(time);
+  return chrono_from_rostime(tmp);
+}
+
+ros::Time rostime_from_chrono(const tf2::TimePoint& time)
+{
+  ros::Time res;
+  res.sec = std::chrono::time_point_cast<std::chrono::seconds>(time).time_since_epoch().count();
+  res.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time).time_since_epoch().count() - res.sec*1e9;
+
+  return res;
+}
+
 // Run x (a tf method, catching TF's exceptions and reraising them as Python exceptions)
 //
 #define WRAP(x) \
@@ -130,14 +151,15 @@ static PyObject *transform_converter(const geometry_msgs::TransformStamped* tran
   return pinst;
 }
 
-static int rostime_converter(PyObject *obj, ros::Time *rt)
+static int chrono_converter(PyObject *obj, tf2::TimePoint *rt)
 {
+  // TODO This works for a ROS 1 only Time in Python !
   PyObject *tsr = PyObject_CallMethod(obj, (char*)"to_sec", NULL);
   if (tsr == NULL) {
     PyErr_SetString(PyExc_TypeError, "time must have a to_sec method, e.g. rospy.Time or rospy.Duration");
     return 0;
   } else {
-    (*rt).fromSec(PyFloat_AsDouble(tsr));
+    *rt = chrono_from_double(PyFloat_AsDouble(tsr));
     Py_DECREF(tsr);
     return 1;
   }
@@ -158,9 +180,7 @@ static int rosduration_converter(PyObject *obj, ros::Duration *rt)
 
 static int BufferCore_init(PyObject *self, PyObject *args, PyObject *kw)
 {
-  ros::Duration cache_time;
-
-  cache_time.fromSec(tf2::BufferCore::DEFAULT_CACHE_TIME);
+  tf2::Duration cache_time = tf2::BufferCore::DEFAULT_CACHE_TIME;
 
   if (!PyArg_ParseTuple(args, "|O&", rosduration_converter, &cache_time))
     return -1;
@@ -196,10 +216,10 @@ static PyObject *canTransformCore(PyObject *self, PyObject *args, PyObject *kw)
 {
   tf2::BufferCore *bc = ((buffer_core_t*)self)->bc;
   char *target_frame, *source_frame;
-  ros::Time time;
+  tf2::TimePoint time;
   static const char *keywords[] = { "target_frame", "source_frame", "time", NULL };
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&", (char**)keywords, &target_frame, &source_frame, rostime_converter, &time))
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&", (char**)keywords, &target_frame, &source_frame, chrono_converter, &time))
     return NULL;
   std::string error_msg;
   bool can_transform = bc->canTransform(target_frame, source_frame, time, &error_msg);
@@ -211,15 +231,15 @@ static PyObject *canTransformFullCore(PyObject *self, PyObject *args, PyObject *
 {
   tf2::BufferCore *bc = ((buffer_core_t*)self)->bc;
   char *target_frame, *source_frame, *fixed_frame;
-  ros::Time target_time, source_time;
+  tf2::TimePoint target_time, source_time;
   static const char *keywords[] = { "target_frame", "target_time", "source_frame", "source_time", "fixed_frame", NULL };
 
   if (!PyArg_ParseTupleAndKeywords(args, kw, "sO&sO&s", (char**)keywords,
                         &target_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &target_time,
                         &source_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &source_time,
                         &fixed_frame))
     return NULL;
@@ -250,10 +270,10 @@ static PyObject *chain(PyObject *self, PyObject *args, PyObject *kw)
 
   if (!PyArg_ParseTupleAndKeywords(args, kw, "sO&sO&s", (char**)keywords,
                         &target_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &target_time,
                         &source_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &source_time,
                         &fixed_frame))
     return NULL;
@@ -290,10 +310,10 @@ static PyObject *lookupTransformCore(PyObject *self, PyObject *args, PyObject *k
 {
   tf2::BufferCore *bc = ((buffer_core_t*)self)->bc;
   char *target_frame, *source_frame;
-  ros::Time time;
+  tf2::TimePoint time;
   static const char *keywords[] = { "target_frame", "source_frame", "time", NULL };
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&", (char**)keywords, &target_frame, &source_frame, rostime_converter, &time))
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&", (char**)keywords, &target_frame, &source_frame, chrono_converter, &time))
     return NULL;
   geometry_msgs::TransformStamped transform;
   WRAP(transform = bc->lookupTransform(target_frame, source_frame, time));
@@ -310,15 +330,15 @@ static PyObject *lookupTransformFullCore(PyObject *self, PyObject *args, PyObjec
 {
   tf2::BufferCore *bc = ((buffer_core_t*)self)->bc;
   char *target_frame, *source_frame, *fixed_frame;
-  ros::Time target_time, source_time;
+  tf2::TimePoint target_time, source_time;
   static const char *keywords[] = { "target_frame", "target_time", "source_frame", "source_time", "fixed_frame", NULL };
 
   if (!PyArg_ParseTupleAndKeywords(args, kw, "sO&sO&s", (char**)keywords,
                         &target_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &target_time,
                         &source_frame,
-                        rostime_converter,
+                        chrono_converter,
                         &source_time,
                         &fixed_frame))
     return NULL;
@@ -338,7 +358,7 @@ static PyObject *lookupTwistCore(PyObject *self, PyObject *args, PyObject *kw)
   ros::Duration averaging_interval;
   static const char *keywords[] = { "tracking_frame", "observation_frame", "time", "averaging_interval", NULL };
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&O&", (char**)keywords, &tracking_frame, &observation_frame, rostime_converter, &time, rosduration_converter, &averaging_interval))
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&O&", (char**)keywords, &tracking_frame, &observation_frame, chrono_converter, &time, rosduration_converter, &averaging_interval))
     return NULL;
   geometry_msgs::Twist twist;
   WRAP(twist = bc->lookupTwist(tracking_frame, observation_frame, time, averaging_interval));
@@ -362,7 +382,7 @@ static PyObject *lookupTwistFullCore(PyObject *self, PyObject *args)
                         &reference_frame,
                         &px, &py, &pz,
                         &reference_point_frame,
-                        rostime_converter, &time,
+                        chrono_converter, &time,
                         rosduration_converter, &averaging_interval))
     return NULL;
   geometry_msgs::Twist twist;
@@ -387,8 +407,10 @@ static PyObject *setTransform(PyObject *self, PyObject *args)
   PyObject *header = PyObject_BorrowAttrString(py_transform, "header");
   transform.child_frame_id = PyString_AsString(PyObject_BorrowAttrString(py_transform, "child_frame_id"));
   transform.header.frame_id = PyString_AsString(PyObject_BorrowAttrString(header, "frame_id"));
-  if (rostime_converter(PyObject_BorrowAttrString(header, "stamp"), &transform.header.stamp) != 1)
+  tf2::TimePoint time;
+  if (chrono_converter(PyObject_BorrowAttrString(header, "stamp"), &time) != 1)
     return NULL;
+  transform.header.stamp = rostime_from_chrono(time);
 
   PyObject *mtransform = PyObject_BorrowAttrString(py_transform, "transform");
   PyObject *translation = PyObject_BorrowAttrString(mtransform, "translation");
@@ -418,8 +440,10 @@ static PyObject *setTransformStatic(PyObject *self, PyObject *args)
   PyObject *header = PyObject_BorrowAttrString(py_transform, "header");
   transform.child_frame_id = PyString_AsString(PyObject_BorrowAttrString(py_transform, "child_frame_id"));
   transform.header.frame_id = PyString_AsString(PyObject_BorrowAttrString(header, "frame_id"));
-  if (rostime_converter(PyObject_BorrowAttrString(header, "stamp"), &transform.header.stamp) != 1)
+  tf2::TimePoint time;
+  if (chrono_converter(PyObject_BorrowAttrString(header, "stamp"), &time) != 1)
     return NULL;
+  transform.header.stamp = rostime_from_chrono(time);
 
   PyObject *mtransform = PyObject_BorrowAttrString(py_transform, "transform");
   PyObject *translation = PyObject_BorrowAttrString(mtransform, "translation");

@@ -79,6 +79,17 @@ public:
 		    const std::string& source_frame, const ros::Time& source_time,
 		    const std::string& fixed_frame, const ros::Duration timeout) const = 0;
 
+  /** \brief Test if a transform is possible
+   * \param target_frame The frame into which to transform
+   * \param source_frame The frame from which to transform
+   * \param time The time at which to transform
+   * \param timeout How long to block before failing
+   * \param errstr A pointer to a string which will be filled with why the transform failed, if not NULL
+   * \return True if the transform is possible, false otherwise
+   */
+  virtual bool
+    canTransform(const std::string& target_frame, const std::string& source_frame,
+     const ros::Time& time) const = 0;
 
   /** \brief Test if a transform is possible
    * \param target_frame The frame into which to transform
@@ -113,7 +124,7 @@ public:
 		 const std::string& target_frame, ros::Duration timeout=ros::Duration(0.0)) const
   {
     // do the transform
-    tf2::doTransform(in, out, lookupTransform(target_frame, tf2::getFrameId(in), tf2::getTimestamp(in), timeout));
+    tf2::doTransform(in, out, lookupTransform(target_frame, tf2::getFrameId(in), tf2::rostime_from_chrono(tf2::getTimestamp(in)), timeout));
     return out;
   }
 
@@ -145,7 +156,7 @@ public:
   {
     // do the transform
     tf2::doTransform(in, out, lookupTransform(target_frame, target_time, 
-                                              tf2::getFrameId(in), tf2::getTimestamp(in), 
+                                              tf2::getFrameId(in), tf2::rostime_from_chrono(tf2::getTimestamp(in)),
                                               fixed_frame, timeout));
     return out;
   }

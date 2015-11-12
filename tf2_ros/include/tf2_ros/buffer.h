@@ -55,7 +55,7 @@ namespace tf2_ros
      * @param debug Whether to advertise the view_frames service that exposes debugging information from the buffer
      * @return 
      */
-    Buffer(ros::Duration cache_time = ros::Duration(BufferCore::DEFAULT_CACHE_TIME), bool debug = false);
+    Buffer(ros::Duration cache_time = tf2::rostime_from_chrono(BufferCore::DEFAULT_CACHE_TIME), bool debug = false);
 
     /** \brief Get the transform between two frames by frame ID.
      * \param target_frame The frame to which data should be transformed
@@ -88,6 +88,15 @@ namespace tf2_ros
                     const std::string& source_frame, const ros::Time& source_time,
                     const std::string& fixed_frame, const ros::Duration timeout) const;
 
+    /** \brief Test if a transform is possible
+     * \param target_frame The frame into which to transform
+     * \param source_frame The frame from which to transform
+     * \param time The time at which to transform
+     * \return True if the transform is possible, false otherwise
+     */
+    virtual bool
+    canTransform(const std::string& target_frame, const std::string& source_frame,
+                 const ros::Time& target_time) const;
 
     /** \brief Test if a transform is possible
      * \param target_frame The frame into which to transform

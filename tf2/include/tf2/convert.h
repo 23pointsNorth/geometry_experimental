@@ -57,7 +57,7 @@ template <class T>
  * \return The timestamp associated with the data. 
  */
 template <class T>
-  const ros::Time& getTimestamp(const T& t);
+  TimePoint getTimestamp(const T& t);
 
 /**\brief Get the frame_id from data 
  * \param t The data input.
@@ -70,7 +70,7 @@ template <class T>
 
 /* An implementation for Stamped<P> datatypes */
 template <class P>
-  const ros::Time& getTimestamp(const tf2::Stamped<P>& t)
+  const TimePoint& getTimestamp(const tf2::Stamped<P>& t)
   {
     return t.stamp_;
   }

@@ -258,7 +258,7 @@ tf2::TF2Error BufferCore::walkToTopParent(F& f, TimePoint time, CompactFrameID t
   }
 
   //If getting the latest get the latest common time
-  if (time == TimePoint(Duration(0)))
+  if (time == TimePoint())
   {
     tf2::TF2Error retval = getLatestCommonTime(target_id, source_id, time, error_string);
     if (retval != tf2::TF2Error::NO_ERROR)
@@ -518,7 +518,7 @@ void BufferCore::lookupTransformImpl(const std::string& target_frame,
   if (target_frame == source_frame) {
     transform.setIdentity();
 
-    if (time == TimePointZero)
+    if (time == TimePoint())
     {
       CompactFrameID target_id = lookupFrameNumber(target_frame);
       TimeCacheInterfacePtr cache = getFrame(target_id);
@@ -811,7 +811,7 @@ std::string BufferCore::allFramesAsStringNoLock() const
     if (frame_ptr == NULL)
       continue;
     CompactFrameID frame_id_num;
-    if(  frame_ptr->getData(TimePointZero, temp))
+    if(  frame_ptr->getData(TimePoint(), temp))
       frame_id_num = temp.frame_id_;
     else
     {
@@ -849,7 +849,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
     if (cache)
       time = cache->getLatestTimestamp();
     else
-      time = TimePointZero;
+      time = TimePoint();
     return tf2::TF2Error::NO_ERROR;
   }
 
@@ -879,7 +879,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
       break;
     }
 
-    if (latest.first != TimePointZero)
+    if (latest.first != TimePoint())
     {
       common_time = std::min(latest.first, common_time);
     }
@@ -894,7 +894,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
       time = common_time;
       if (time == TimePoint::max())
       {
-        time = TimePoint(Duration(0));
+        time = TimePoint();
       }
       return tf2::TF2Error::NO_ERROR;
     }
@@ -934,7 +934,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
       break;
     }
 
-    if (latest.first != TimePointZero)
+    if (latest.first != TimePoint())
     {
       common_time = std::min(latest.first, common_time);
     }
@@ -954,7 +954,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
       time = common_time;
       if (time == TimePoint::max())
       {
-        time = TimePoint(Duration(0));
+        time = TimePoint();
       }
       return tf2::TF2Error::NO_ERROR;
     }
@@ -985,7 +985,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
     std::vector<P_TimeAndFrameID>::iterator end = lct_cache.end();
     for (; it != end; ++it)
     {
-      if (it->first != TimePointZero)
+      if (it->first != TimePoint())
       {
         common_time = std::min(common_time, it->first);
       }
@@ -999,7 +999,7 @@ tf2::TF2Error BufferCore::getLatestCommonTime(CompactFrameID target_id, CompactF
 
   if (common_time == TimePoint::max())
   {
-    common_time = TimePoint(Duration(0));
+    common_time = TimePoint();
   }
 
   time = common_time;
@@ -1030,7 +1030,7 @@ std::string BufferCore::allFramesAsYAML(TimePoint current_time) const
       continue;
     }
 
-    if(!cache->getData(TimePoint(Duration(0)), temp))
+    if(!cache->getData(TimePoint(), temp))
     {
       continue;
     }
@@ -1060,7 +1060,7 @@ std::string BufferCore::allFramesAsYAML(TimePoint current_time) const
     mstream << "  rate: " << rate << std::endl;
     mstream << "  most_recent_transform: " << displayTimePoint(cache->getLatestTimestamp()) << std::endl;
     mstream << "  oldest_transform: " << displayTimePoint(cache->getOldestTimestamp()) << std::endl;
-    if ( current_time !=TimePointZero ) {
+    if ( current_time !=TimePoint() ) {
       mstream << "  transform_delay: " << displayDuration(current_time - cache->getLatestTimestamp()) << std::endl;
     }
     mstream << "  buffer_length: " << displayDuration(cache->getLatestTimestamp() - cache->getOldestTimestamp()) << std::endl;
@@ -1071,7 +1071,7 @@ std::string BufferCore::allFramesAsYAML(TimePoint current_time) const
 
 std::string BufferCore::allFramesAsYAML() const
 {
-  return this->allFramesAsYAML(TimePointZero);
+  return this->allFramesAsYAML(TimePoint());
 }
 
 TransformableCallbackHandle BufferCore::addTransformableCallback(const TransformableCallback& cb)
@@ -1139,7 +1139,7 @@ TransformableRequestHandle BufferCore::addTransformableRequest(TransformableCall
     // TODO: This is incorrect, but better than nothing.  Really we want the latest time for
     // any of the frames
     getLatestCommonTime(req.target_id, req.source_id, latest_time, 0);
-    if ((latest_time != TimePointZero) && (time + cache_time_ < latest_time))
+    if ((latest_time != TimePoint()) && (time + cache_time_ < latest_time))
     {
       return 0xffffffffffffffffULL;
     }
@@ -1278,7 +1278,7 @@ void BufferCore::testTransformableRequests()
     // TODO: This is incorrect, but better than nothing.  Really we want the latest time for
     // any of the frames
     getLatestCommonTime(req.target_id, req.source_id, latest_time, 0);
-    if ((latest_time != TimePointZero) && (req.time + cache_time_ < latest_time))
+    if ((latest_time != TimePoint()) && (req.time + cache_time_ < latest_time))
     {
       do_cb = true;
       result = TransformFailure;
@@ -1343,7 +1343,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
     if (!counter_frame) {
       continue;
     }
-    if(!counter_frame->getData(TimePoint(Duration(0)), temp)) {
+    if(!counter_frame->getData(TimePoint(), temp)) {
       continue;
     } else {
       frame_id_num = temp.frame_id_;
@@ -1370,7 +1370,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
             << "Broadcaster: " << authority << "\\n"
             << "Average rate: " << rate << " Hz\\n"
             << "Most recent transform: " << displayTimePoint(counter_frame->getLatestTimestamp()) <<" ";
-    if (current_time != TimePointZero)
+    if (current_time != TimePoint())
       mstream << "( "<<  displayDuration(current_time - counter_frame->getLatestTimestamp()) << " sec old)";
     mstream << "\\n"
       //    << "(time: " << getFrame(counter)->getLatestTimestamp().toSec() << ")\\n"
@@ -1385,7 +1385,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
     unsigned int frame_id_num;
     TimeCacheInterfacePtr counter_frame = getFrame(counter);
     if (!counter_frame) {
-      if (current_time != TimePointZero) {
+      if (current_time != TimePoint()) {
         mstream << "edge [style=invis];" <<std::endl;
         mstream << " subgraph cluster_legend { style=bold; color=black; label =\"view_frames Result\";\n"
                 << "\"Recorded at time: " << displayTimePoint(current_time) << "\"[ shape=plaintext ] ;\n "
@@ -1393,7 +1393,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
       }
       continue;
     }
-    if (counter_frame->getData(TimePointZero, temp)) {
+    if (counter_frame->getData(TimePoint(), temp)) {
       frame_id_num = temp.frame_id_;
     } else {
     	frame_id_num = 0;
@@ -1403,7 +1403,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
     {
       mstream << "edge [style=invis];" <<std::endl;
       mstream << " subgraph cluster_legend { style=bold; color=black; label =\"view_frames Result\";\n";
-      if (current_time != TimePointZero)
+      if (current_time != TimePoint())
         mstream << "\"Recorded at time: " << displayTimePoint(current_time) << "\"[ shape=plaintext ] ;\n ";
       mstream << "}" << "->" << "\"" << frameIDs_reverse[counter] << "\";" << std::endl;
     }
@@ -1414,7 +1414,7 @@ std::string BufferCore::_allFramesAsDot(TimePoint current_time) const
 
 std::string BufferCore::_allFramesAsDot() const
 {
-  return _allFramesAsDot(TimePointZero);
+  return _allFramesAsDot(TimePoint());
 }
 
 void BufferCore::_chainAsVector(const std::string & target_frame, TimePoint target_time, const std::string & source_frame, TimePoint source_time, const std::string& fixed_frame, std::vector<std::string>& output) const

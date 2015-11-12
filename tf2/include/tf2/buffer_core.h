@@ -33,6 +33,7 @@
 #define TF2_BUFFER_CORE_H
 
 #include "convert.h"
+#include "time.h"
 #include "LinearMath/Transform.h"
 #include "transform_storage.h"
 
@@ -50,6 +51,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <chrono>
 
 namespace tf2
 {
@@ -111,17 +114,16 @@ public:
    */
   bool setTransform(const geometry_msgs::TransformStamped& transform, const std::string & authority, bool is_static = false)
   {
-    tf2::Transform tf2_transform(tf2::Quaternion(transform.transform.rotation.w,
-                                                 transform.transform.rotation.x,
+    tf2::Transform tf2_transform(tf2::Quaternion(transform.transform.rotation.x,
                                                  transform.transform.rotation.y,
-                                                 transform.transform.rotation.z),
+                                                 transform.transform.rotation.z,
+                                                 transform.transform.rotation.w),
                                  tf2::Vector3(transform.transform.translation.x,
                                               transform.transform.translation.y,
                                               transform.transform.translation.z));
 
     return setTransformImpl(tf2_transform, transform.header.frame_id, transform.child_frame_id,
-                            TimePoint(std::chrono::seconds(transform.header.stamp.sec) +
-                                      std::chrono::nanoseconds(transform.header.stamp.nsec)), authority, is_static);
+                            tf2::chrono_from_rostime(transform.header.stamp), authority, is_static);
   }
 
   /*********** Accessors *************/
@@ -150,9 +152,7 @@ public:
     msg.transform.rotation.y = transform.getRotation().y();
     msg.transform.rotation.z = transform.getRotation().z();
     msg.transform.rotation.w = transform.getRotation().w();
-    std::chrono::time_point_cast<std::chrono::seconds>(time_out);
-    msg.header.stamp.sec = std::chrono::time_point_cast<std::chrono::seconds>(time_out).time_since_epoch().count();
-    msg.header.stamp.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time_out).time_since_epoch().count() - msg.header.stamp.sec;
+    msg.header.stamp = tf2::rostime_from_chrono(time_out);
     msg.header.frame_id = target_frame;
     msg.child_frame_id = source_frame;
 
@@ -188,8 +188,7 @@ public:
     msg.transform.rotation.y = transform.getRotation().y();
     msg.transform.rotation.z = transform.getRotation().z();
     msg.transform.rotation.w = transform.getRotation().w();
-    msg.header.stamp.sec = std::chrono::time_point_cast<std::chrono::seconds>(time_out).time_since_epoch().count();
-    msg.header.stamp.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time_out).time_since_epoch().count() - msg.header.stamp.sec;
+    msg.header.stamp = tf2::rostime_from_chrono(time_out);
     msg.header.frame_id = target_frame;
     msg.child_frame_id = source_frame;
 
@@ -419,12 +418,46 @@ private:
 
   /************************* Internal Functions ****************************/
 
+  /** \brief Add transform information to the tf data structure
+   * \param transform The transform to store
+   * \param frame_id The frame into which to transform
+   * \param child_frame_id The frame from which to transform
+   * \param stamp The timestamp of when the transform happens
+   * \param authority The source of the information for this transform
+   * \param is_static Record this transform as a static transform.  It will be good across all time.  (This cannot be changed after the first call.)
+   * \return True unless an error occured
+   */
   bool setTransformImpl(const tf2::Transform& transform_in, const std::string frame_id,
                         const std::string child_frame_id, const TimePoint stamp,
                         const std::string& authority, bool is_static);
+
+  /** \brief Get the transform between two frames by frame ID assuming fixed frame.
+   * \param target_frame The frame to which data should be transformed
+   * \param target_time The time to which the data should be transformed. (0 will get the latest)
+   * \param source_frame The frame where the data originated
+   * \param source_time The time at which the source_frame should be evaluated. (0 will get the latest)
+   * \param fixed_frame The frame in which to assume the transform is constant in time.
+   * \param transform The transform between the frames
+   * \param time_out The time at which the transform happened
+   *
+   * Possible exceptions tf2::LookupException, tf2::ConnectivityException,
+   * tf2::ExtrapolationException, tf2::InvalidArgumentException
+   */
   void lookupTransformImpl(const std::string& target_frame, const std::string& source_frame,
       const TimePoint& time_in, tf2::Transform& transform, TimePoint& time_out) const;
 
+  /** \brief Get the transform between two frames by frame ID assuming fixed frame.
+   * \param target_frame The frame to which data should be transformed
+   * \param target_time The time to which the data should be transformed. (0 will get the latest)
+   * \param source_frame The frame where the data originated
+   * \param source_time The time at which the source_frame should be evaluated. (0 will get the latest)
+   * \param fixed_frame The frame in which to assume the transform is constant in time.
+   * \param transform The transform between the frames
+   * \param time_out The time at which the transform happened
+   *
+   * Possible exceptions tf2::LookupException, tf2::ConnectivityException,
+   * tf2::ExtrapolationException, tf2::InvalidArgumentException
+   */
   void lookupTransformImpl(const std::string& target_frame, const TimePoint& target_time,
       const std::string& source_frame, const TimePoint& source_time,
       const std::string& fixed_frame, tf2::Transform& transform, TimePoint& time_out) const;

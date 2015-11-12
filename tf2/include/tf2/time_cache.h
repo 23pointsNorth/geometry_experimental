@@ -38,14 +38,7 @@
 
 #include <sstream>
 
-#include <ros/message_forward.h>
-
 #include <boost/shared_ptr.hpp>
-
-namespace geometry_msgs
-{
-ROS_DECLARE_MESSAGE(TransformStamped);
-}
 
 namespace tf2
 {
@@ -97,7 +90,7 @@ class TimeCache : public TimeCacheInterface
   static const unsigned int MAX_LENGTH_LINKED_LIST = 1000000; //!< Maximum length of linked list, to make sure not to be able to use unlimited memory.
   static constexpr Duration DEFAULT_MAX_STORAGE_TIME = std::chrono::seconds(10); //!< default value of 10 seconds storage
 
-  TimeCache(Duration  max_storage_time = DEFAULT_MAX_STORAGE_TIME);
+  TimeCache(Duration max_storage_duration = DEFAULT_MAX_STORAGE_TIME);
 
 
   /// Virtual methods

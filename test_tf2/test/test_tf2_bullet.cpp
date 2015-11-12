@@ -41,7 +41,7 @@ static const double EPS = 1e-3;
 
 TEST(TfBullet, Transform)
 {
-  tf2::Stamped<btTransform> v1(btTransform(btQuaternion(1,0,0,0), btVector3(1,2,3)), ros::Time(2.0), "A");
+  tf2::Stamped<btTransform> v1(btTransform(btQuaternion(1,0,0,0), btVector3(1,2,3)), tf2::TimePoint(std::chrono::seconds(2)), "A");
 
   // simple api
   btTransform v_simple = tf_buffer->transform(v1, "B", ros::Duration(2.0));
@@ -61,7 +61,7 @@ TEST(TfBullet, Transform)
 
 TEST(TfBullet, Vector)
 {
-  tf2::Stamped<btVector3>  v1(btVector3(1,2,3), ros::Time(2.0), "A");
+  tf2::Stamped<btVector3>  v1(btVector3(1,2,3), tf2::TimePoint(std::chrono::seconds(2)), "A");
 
   // simple api
   btVector3 v_simple = tf_buffer->transform(v1, "B", ros::Duration(2.0));

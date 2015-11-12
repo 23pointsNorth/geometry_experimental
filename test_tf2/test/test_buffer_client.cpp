@@ -81,7 +81,7 @@ TEST(tf2_ros, buffer_client_different_types)
   //make sure that things are set up
   ASSERT_TRUE(client.waitForServer(ros::Duration(4.0)));
 
-  tf2::Stamped<KDL::Vector> k1(KDL::Vector(0, 0, 0), ros::Time(), "a");
+  tf2::Stamped<KDL::Vector> k1(KDL::Vector(0, 0, 0), tf2::TimePoint(), "a");
 
   try
   {

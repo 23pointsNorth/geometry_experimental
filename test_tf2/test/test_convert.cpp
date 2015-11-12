@@ -45,7 +45,7 @@ TEST(tf2Convert, kdlToBullet)
 {
   double epsilon = 1e-9;
 
-  tf2::Stamped<btVector3> b(btVector3(1,2,3), ros::Time(), "my_frame");
+  tf2::Stamped<btVector3> b(btVector3(1,2,3), tf2::TimePoint(), "my_frame");
 
   tf2::Stamped<btVector3> b1 = b;
   tf2::Stamped<KDL::Vector> k1;
@@ -55,14 +55,14 @@ TEST(tf2Convert, kdlToBullet)
   tf2::convert(k1, b2);
 
   EXPECT_EQ(b.frame_id_, b2.frame_id_);
-  EXPECT_NEAR(b.stamp_.toSec(), b2.stamp_.toSec(), epsilon);
+  EXPECT_EQ(b.stamp_, b2.stamp_);
   EXPECT_NEAR(b.x(), b2.x(), epsilon);
   EXPECT_NEAR(b.y(), b2.y(), epsilon);
   EXPECT_NEAR(b.z(), b2.z(), epsilon);
 
 
   EXPECT_EQ(b1.frame_id_, b2.frame_id_);
-  EXPECT_NEAR(b1.stamp_.toSec(), b2.stamp_.toSec(), epsilon);
+  EXPECT_EQ(b1.stamp_, b2.stamp_);
   EXPECT_NEAR(b1.x(), b2.x(), epsilon);
   EXPECT_NEAR(b1.y(), b2.y(), epsilon);
   EXPECT_NEAR(b1.z(), b2.z(), epsilon);
@@ -72,7 +72,7 @@ TEST(tf2Convert, kdlBulletROSConversions)
 {
   double epsilon = 1e-9;
 
-  tf2::Stamped<btVector3> b1(btVector3(1,2,3), ros::Time(), "my_frame"), b2, b3, b4;
+  tf2::Stamped<btVector3> b1(btVector3(1,2,3), tf2::TimePoint(), "my_frame"), b2, b3, b4;
   geometry_msgs::PointStamped r1, r2, r3;
   tf2::Stamped<KDL::Vector> k1, k2, k3;
 
@@ -91,7 +91,7 @@ TEST(tf2Convert, kdlBulletROSConversions)
   tf2::convert(r3, b4);
 
   EXPECT_EQ(b1.frame_id_, b4.frame_id_);
-  EXPECT_NEAR(b1.stamp_.toSec(), b4.stamp_.toSec(), epsilon);
+  EXPECT_EQ(b1.stamp_, b4.stamp_);
   EXPECT_NEAR(b1.x(), b4.x(), epsilon);
   EXPECT_NEAR(b1.y(), b4.y(), epsilon);
   EXPECT_NEAR(b1.z(), b4.z(), epsilon);

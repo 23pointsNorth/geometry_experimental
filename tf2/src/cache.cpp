@@ -98,7 +98,7 @@ uint8_t TimeCache::findClosest(TransformStorage*& one, TransformStorage*& two, T
   }
 
   //If time == 0 return the latest
-  if (target_time == TimePoint(Duration::zero()))
+  if (target_time == TimePoint())
   {
     one = &storage_.front();
     return 1;
@@ -172,7 +172,7 @@ void TimeCache::interpolate(const TransformStorage& one, const TransformStorage&
     return;
   }
   //Calculate the ratio
-  tf2Scalar ratio = (time - one.stamp_) / (two.stamp_ - one.stamp_);
+  tf2Scalar ratio = std::chrono::duration<float>(time - one.stamp_) / std::chrono::duration<float>(two.stamp_ - one.stamp_);
 
   //Interpolate translation
   output.translation_.setInterpolate3(one.translation_, two.translation_, ratio);

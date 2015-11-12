@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tf2_kdl)
 
+add_definitions(-std=gnu++11)
+
 find_package(orocos_kdl)
 find_package(catkin REQUIRED COMPONENTS cmake_modules tf2 tf2_ros tf2_msgs)
 

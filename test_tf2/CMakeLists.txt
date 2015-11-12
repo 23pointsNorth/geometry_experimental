@@ -6,6 +6,7 @@ endif()
 
 project(test_tf2)
 
+add_definitions(-std=gnu++11)
 
 find_package(catkin REQUIRED COMPONENTS rosconsole roscpp rostest tf tf2 tf2_bullet tf2_ros tf2_geometry_msgs tf2_kdl tf2_msgs)
 find_package(Boost REQUIRED COMPONENTS thread)

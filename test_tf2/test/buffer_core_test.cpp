@@ -164,7 +164,7 @@ void push_back_1(std::vector<std::string>& children, std::vector<std::string>& p
   dy.push_back(0.0);
 }
 
-void setupTree(tf2::BufferCore& mBC, const std::string& mode, const ros::Time & time, const ros::Duration& interpolation_space = ros::Duration())
+void setupTree(tf2::BufferCore& mBC, const std::string& mode, const tf2::TimePoint & time, const tf2::Duration& interpolation_space = tf2::Duration::zero())
 {
   ROS_DEBUG("Clearing Buffer Core for new test setup");
   mBC.clear();
@@ -174,7 +174,9 @@ void setupTree(tf2::BufferCore& mBC, const std::string& mode, const ros::Time & 
   std::vector<std::string> children;
   std::vector<std::string> parents;
   std::vector<double> dx, dy;
-  
+
+  tf2::Duration interpolation_space_half = std::chrono::duration_cast<tf2::Duration>(std::chrono::duration_cast<std::chrono::duration<float> >(interpolation_space) * .5);
+
   if (mode == "i")
   {
     push_back_i(children, parents, dx, dy);
@@ -228,8 +230,8 @@ void setupTree(tf2::BufferCore& mBC, const std::string& mode, const ros::Time & 
         ts.transform.rotation.y = 0;
         ts.transform.rotation.z = sin(direction * M_PI/8);
         ts.transform.rotation.w = cos(direction * M_PI/8);
-        if (time > ros::Time() + (interpolation_space * .5))
-          ts.header.stamp = time - (interpolation_space * .5);
+        if (time > tf2::TimePoint() + interpolation_space_half)
+          ts.header.stamp = tf2::rostime_from_chrono(time - interpolation_space_half);
         else
           ts.header.stamp = ros::Time();
             
@@ -238,10 +240,11 @@ void setupTree(tf2::BufferCore& mBC, const std::string& mode, const ros::Time & 
           ts.child_frame_id = frame_prefix + frames[i];
         else
           ts.child_frame_id = frames[i]; // connect first frame
+
         EXPECT_TRUE(mBC.setTransform(ts, "authority"));
-        if (interpolation_space > ros::Duration())
+        if (interpolation_space > tf2::Duration::zero())
         {
-          ts.header.stamp = time + interpolation_space * .5;
+          ts.header.stamp = tf2::rostime_from_chrono(time + interpolation_space_half);
           EXPECT_TRUE(mBC.setTransform(ts, "authority"));
         
         }
@@ -270,17 +273,17 @@ void setupTree(tf2::BufferCore& mBC, const std::string& mode, const ros::Time & 
     setIdentity(ts.transform);
     ts.transform.translation.x = dx[i];
     ts.transform.translation.y = dy[i];
-    if (time > ros::Time() + (interpolation_space * .5))
-      ts.header.stamp = time - (interpolation_space * .5);
+    if (time > tf2::TimePoint() + interpolation_space_half)
+      ts.header.stamp = tf2::rostime_from_chrono(time - interpolation_space_half);
     else
       ts.header.stamp = ros::Time();
             
     ts.header.frame_id = parents[i];
     ts.child_frame_id = children[i];
     EXPECT_TRUE(mBC.setTransform(ts, "authority"));
-    if (interpolation_space > ros::Duration())
+    if (interpolation_space > tf2::Duration::zero())
     {
-      ts.header.stamp = time + interpolation_space * .5;
+      ts.header.stamp = tf2::rostime_from_chrono(time + interpolation_space_half);
       EXPECT_TRUE(mBC.setTransform(ts, "authority"));
       
     }
@@ -627,18 +630,18 @@ TEST(BufferCore_lookupTransform, i_configuration)
 
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -659,7 +662,7 @@ TEST(BufferCore_lookupTransform, i_configuration)
 
     geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
     //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
-    EXPECT_EQ(outpose.header.stamp, eval_time);
+    EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
     EXPECT_EQ(outpose.header.frame_id, source_frame);
     EXPECT_EQ(outpose.child_frame_id, target_frame);
     EXPECT_NEAR(outpose.transform.translation.y, 0, epsilon);
@@ -695,17 +698,18 @@ TEST(BufferCore_lookupTransform, i_configuration)
     else
     {
       EXPECT_FALSE("i configuration: Shouldn't get here");
-      printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());
+      std::string eval_time_str = tf2::displayTimePoint(eval_time);
+      printf("source_frame %s target_frame %s time %s\n", source_frame.c_str(), target_frame.c_str(), eval_time_str.c_str());
     }
     
   }
 }
 
 /* Check 1 result return false if test parameters unmet */
-bool check_1_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const ros::Time& eval_time, double epsilon)
+bool check_1_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const tf2::TimePoint& eval_time, double epsilon)
 {
   //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
-  EXPECT_EQ(outpose.header.stamp, eval_time);
+  EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
   EXPECT_EQ(outpose.header.frame_id, source_frame);
   EXPECT_EQ(outpose.child_frame_id, target_frame);
   EXPECT_NEAR(outpose.transform.translation.y, 0, epsilon);
@@ -737,10 +741,10 @@ bool check_1_result(const geometry_msgs::TransformStamped& outpose, const std::s
 }
 
 /* Check v result return false if test parameters unmet */
-bool check_v_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const ros::Time& eval_time, double epsilon)
+bool check_v_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const tf2::TimePoint& eval_time, double epsilon)
 {
   //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
-  EXPECT_EQ(outpose.header.stamp, eval_time);
+  EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
   EXPECT_EQ(outpose.header.frame_id, source_frame);
   EXPECT_EQ(outpose.child_frame_id, target_frame);
   EXPECT_NEAR(outpose.transform.translation.z, 0, epsilon);
@@ -847,10 +851,10 @@ bool check_v_result(const geometry_msgs::TransformStamped& outpose, const std::s
 }
 
 /* Check v result return false if test parameters unmet */
-bool check_y_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const ros::Time& eval_time, double epsilon)
+bool check_y_result(const geometry_msgs::TransformStamped& outpose, const std::string& source_frame, const std::string& target_frame, const tf2::TimePoint& eval_time, double epsilon)
 {
   //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
-  EXPECT_EQ(outpose.header.stamp, eval_time);
+  EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
   EXPECT_EQ(outpose.header.frame_id, source_frame);
   EXPECT_EQ(outpose.child_frame_id, target_frame);
   EXPECT_NEAR(outpose.transform.translation.z, 0, epsilon);
@@ -965,18 +969,18 @@ TEST(BufferCore_lookupTransform, one_link_configuration)
 
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -1009,18 +1013,18 @@ TEST(BufferCore_lookupTransform, v_configuration)
 
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -1056,18 +1060,18 @@ TEST(BufferCore_lookupTransform, y_configuration)
 
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -1102,18 +1106,18 @@ TEST(BufferCore_lookupTransform, multi_configuration)
 
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -1271,46 +1275,46 @@ TEST(BufferCore_lookupTransform, compound_xfm_configuration)
     expected_rootc = tb * tc;
 
     // root -> b -> c
-    geometry_msgs::TransformStamped out_rootc = mBC.lookupTransform("root", "c", ros::Time());
+    geometry_msgs::TransformStamped out_rootc = mBC.lookupTransform("root", "c", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_rootc, expected_rootc, epsilon);
 
     // root -> b -> c -> d
-    geometry_msgs::TransformStamped out_rootd = mBC.lookupTransform("root", "d", ros::Time());
+    geometry_msgs::TransformStamped out_rootd = mBC.lookupTransform("root", "d", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_rootd, expected_rootd, epsilon);
 
     // a <- root -> b
-    geometry_msgs::TransformStamped out_ab = mBC.lookupTransform("a", "b", ros::Time());
+    geometry_msgs::TransformStamped out_ab = mBC.lookupTransform("a", "b", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_ab, expected_ab, epsilon);
 
-    geometry_msgs::TransformStamped out_ba = mBC.lookupTransform("b", "a", ros::Time());
+    geometry_msgs::TransformStamped out_ba = mBC.lookupTransform("b", "a", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_ba, expected_ba, epsilon);
 
     // a <- root -> b -> c
-    geometry_msgs::TransformStamped out_ac = mBC.lookupTransform("a", "c", ros::Time());
+    geometry_msgs::TransformStamped out_ac = mBC.lookupTransform("a", "c", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_ac, expected_ac, epsilon);
 
-    geometry_msgs::TransformStamped out_ca = mBC.lookupTransform("c", "a", ros::Time());
+    geometry_msgs::TransformStamped out_ca = mBC.lookupTransform("c", "a", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_ca, expected_ca, epsilon);
 
     // a <- root -> b -> c -> d
-    geometry_msgs::TransformStamped out_ad = mBC.lookupTransform("a", "d", ros::Time());
+    geometry_msgs::TransformStamped out_ad = mBC.lookupTransform("a", "d", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_ad, expected_ad, epsilon);
 
-    geometry_msgs::TransformStamped out_da = mBC.lookupTransform("d", "a", ros::Time());
+    geometry_msgs::TransformStamped out_da = mBC.lookupTransform("d", "a", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_da, expected_da, epsilon);
 
     // b -> c
-    geometry_msgs::TransformStamped out_cb = mBC.lookupTransform("c", "b", ros::Time());
+    geometry_msgs::TransformStamped out_cb = mBC.lookupTransform("c", "b", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_cb, expected_cb, epsilon);
 
-    geometry_msgs::TransformStamped out_bc = mBC.lookupTransform("b", "c", ros::Time());
+    geometry_msgs::TransformStamped out_bc = mBC.lookupTransform("b", "c", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_bc, expected_bc, epsilon);
 
     // b -> c -> d
-    geometry_msgs::TransformStamped out_bd = mBC.lookupTransform("b", "d", ros::Time());
+    geometry_msgs::TransformStamped out_bd = mBC.lookupTransform("b", "d", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_bd, expected_bd, epsilon);
 
-    geometry_msgs::TransformStamped out_db = mBC.lookupTransform("d", "b", ros::Time());
+    geometry_msgs::TransformStamped out_db = mBC.lookupTransform("d", "b", tf2::TimePoint());
     CHECK_TRANSFORMS_NEAR(out_db, expected_db, epsilon);
 }
 
@@ -1321,10 +1325,10 @@ TEST(BufferCore_lookupTransform, helix_configuration)
 
     tf2::BufferCore mBC;
 
-    ros::Time     t0        = ros::Time() + ros::Duration(10);
-    ros::Duration step      = ros::Duration(0.05);
-    ros::Duration half_step = ros::Duration(0.025);
-    ros::Time     t1        = t0 + ros::Duration(5.0);
+    tf2::TimePoint     t0        = tf2::TimePoint() + std::chrono::seconds(10);
+    tf2::Duration step      = std::chrono::milliseconds(50);
+    tf2::Duration half_step = std::chrono::milliseconds(25);
+    tf2::TimePoint     t1        = t0 + std::chrono::seconds(5);
 
     /*
      * a->b->c
@@ -1342,15 +1346,15 @@ TEST(BufferCore_lookupTransform, helix_configuration)
     double theta = 0.25;
     double vel   = 1.0;
 
-    for (ros::Time t = t0; t <= t1; t += step)
+    for (tf2::TimePoint t = t0; t <= t1; t += step)
     {
-    	ros::Time t2 = t + half_step;
-    	double dt  = (t - t0).toSec();
-    	double dt2 = (t2 - t0).toSec();
+      tf2::TimePoint t2 = t + half_step;
+      double dt  = std::chrono::duration_cast<std::chrono::duration<float> >(t - t0).count();
+      double dt2 = std::chrono::duration_cast<std::chrono::duration<float> >(t2 - t0).count();
 
         geometry_msgs::TransformStamped ts;
         ts.header.frame_id = "a";
-        ts.header.stamp    = t;
+        ts.header.stamp    = tf2::rostime_from_chrono(t);
         ts.child_frame_id  = "b";
         ts.transform.translation.z = vel * dt;
         ts.transform.rotation.w = 1.0;
@@ -1358,7 +1362,7 @@ TEST(BufferCore_lookupTransform, helix_configuration)
 
         geometry_msgs::TransformStamped ts2;
         ts2.header.frame_id = "b";
-        ts2.header.stamp    = t;
+        ts2.header.stamp    = tf2::rostime_from_chrono(t);
         ts2.child_frame_id  = "c";
         ts2.transform.translation.x = cos(theta * dt);
         ts2.transform.translation.y = sin(theta * dt);
@@ -1370,7 +1374,7 @@ TEST(BufferCore_lookupTransform, helix_configuration)
 
         geometry_msgs::TransformStamped ts3;
         ts3.header.frame_id = "a";
-        ts3.header.stamp    = t2;
+        ts3.header.stamp    = tf2::rostime_from_chrono(t2);
         ts3.child_frame_id  = "d";
         ts3.transform.translation.z = cos(theta * dt2);
         ts3.transform.rotation.w = 1.0;
@@ -1378,11 +1382,11 @@ TEST(BufferCore_lookupTransform, helix_configuration)
     }
 
 
-    for (ros::Time t = t0 + half_step; t < t1; t += step)
+    for (tf2::TimePoint t = t0 + half_step; t < t1; t += step)
     {
-    	ros::Time t2 = t + half_step;
-    	double dt  = (t - t0).toSec();
-    	double dt2 = (t2 - t0).toSec();
+      tf2::TimePoint t2 = t + half_step;
+      double dt  = std::chrono::duration_cast<std::chrono::duration<float> >(t - t0).count();
+      double dt2 = std::chrono::duration_cast<std::chrono::duration<float> >(t2 - t0).count();
 
         geometry_msgs::TransformStamped out_ab = mBC.lookupTransform("a", "b", t);
         EXPECT_NEAR(out_ab.transform.translation.z, vel * dt, epsilon);
@@ -1408,11 +1412,11 @@ TEST(BufferCore_lookupTransform, helix_configuration)
     }
 
     // Advanced API
-    for (ros::Time t = t0 + half_step; t < t1; t += (step + step))
+    for (tf2::TimePoint t = t0 + half_step; t < t1; t += (step + step))
     {
-    	ros::Time t2 = t + step;
-    	double dt  = (t - t0).toSec();
-    	double dt2 = (t2 - t0).toSec();
+      tf2::TimePoint t2 = t + step;
+      double dt  = std::chrono::duration_cast<std::chrono::duration<float> >(t - t0).count();
+      double dt2 = std::chrono::duration_cast<std::chrono::duration<float> >(t2 - t0).count();
 
         geometry_msgs::TransformStamped out_cd2 = mBC.lookupTransform("c", t, "d", t2, "a");
         EXPECT_NEAR(out_cd2.transform.translation.x, -1,           			      epsilon);
@@ -1430,18 +1434,18 @@ TEST(BufferCore_lookupTransform, ring_45_configuration)
   double epsilon = 1e-6;
   rostest::Permuter permuter;
 
-  std::vector<ros::Time> times;
-  times.push_back(ros::Time(1.0));
-  times.push_back(ros::Time(10.0));
-  times.push_back(ros::Time(0.0));
-  ros::Time eval_time;
+  std::vector<tf2::TimePoint> times;
+  times.push_back(tf2::TimePoint(std::chrono::seconds(1)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(10)));
+  times.push_back(tf2::TimePoint(std::chrono::seconds(0)));
+  tf2::TimePoint eval_time;
   permuter.addOptionSet(times, &eval_time);
 
-  std::vector<ros::Duration> durations;
-  durations.push_back(ros::Duration(1.0));
-  durations.push_back(ros::Duration(0.001));
-  durations.push_back(ros::Duration(0.1));
-  ros::Duration interpolation_space;
+  std::vector<tf2::Duration> durations;
+  durations.push_back(std::chrono::seconds(1));
+  durations.push_back(std::chrono::milliseconds(1));
+  durations.push_back(std::chrono::milliseconds(100));
+  tf2::Duration interpolation_space = tf2::Duration::zero();
   //  permuter.addOptionSet(durations, &interpolation_space);
 
   std::vector<std::string> frames;
@@ -1478,7 +1482,7 @@ TEST(BufferCore_lookupTransform, ring_45_configuration)
 
 
     //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
-    EXPECT_EQ(outpose.header.stamp, eval_time);
+    EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
     EXPECT_EQ(outpose.header.frame_id, source_frame);
     EXPECT_EQ(outpose.child_frame_id, target_frame);
 
@@ -1727,7 +1731,8 @@ TEST(BufferCore_lookupTransform, ring_45_configuration)
     else
     {
       EXPECT_FALSE("Ring_45 testing Shouldn't get here");
-      printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());
+      std::string eval_time_str = tf2::displayTimePoint(eval_time);
+      printf("source_frame %s target_frame %s time %s\n", source_frame.c_str(), target_frame.c_str(), eval_time_str.c_str());
     }
     
   }
@@ -1737,17 +1742,17 @@ TEST(BufferCore_lookupTransform, invalid_arguments)
 {
   tf2::BufferCore mBC;
   
-  setupTree(mBC, "i", ros::Time(1.0));
+  setupTree(mBC, "i", tf2::TimePoint(std::chrono::seconds(1)));
   
-  EXPECT_NO_THROW(mBC.lookupTransform("b", "a", ros::Time()));
+  EXPECT_NO_THROW(mBC.lookupTransform("b", "a", tf2::TimePoint()));
 
   //Empty frame_id
-  EXPECT_THROW(mBC.lookupTransform("", "a", ros::Time()), tf2::InvalidArgumentException);
-  EXPECT_THROW(mBC.lookupTransform("b", "", ros::Time()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform("", "a", tf2::TimePoint()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform("b", "", tf2::TimePoint()), tf2::InvalidArgumentException);
 
   //frame_id with /
-  EXPECT_THROW(mBC.lookupTransform("/b", "a", ros::Time()), tf2::InvalidArgumentException);
-  EXPECT_THROW(mBC.lookupTransform("b", "/a", ros::Time()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform("/b", "a", tf2::TimePoint()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform("b", "/a", tf2::TimePoint()), tf2::InvalidArgumentException);
 
 };
 
@@ -1755,18 +1760,18 @@ TEST(BufferCore_canTransform, invalid_arguments)
 {
   tf2::BufferCore mBC;
 
-  setupTree(mBC, "i", ros::Time(1.0));
+  setupTree(mBC, "i", tf2::TimePoint(std::chrono::seconds(1)));
   
-  EXPECT_TRUE(mBC.canTransform("b", "a", ros::Time()));
+  EXPECT_TRUE(mBC.canTransform("b", "a", tf2::TimePoint()));
   
   
   //Empty frame_id
-  EXPECT_FALSE(mBC.canTransform("", "a", ros::Time()));
-  EXPECT_FALSE(mBC.canTransform("b", "", ros::Time()));
+  EXPECT_FALSE(mBC.canTransform("", "a", tf2::TimePoint()));
+  EXPECT_FALSE(mBC.canTransform("b", "", tf2::TimePoint()));
 
   //frame_id with /
-  EXPECT_FALSE(mBC.canTransform("/b", "a", ros::Time()));
-  EXPECT_FALSE(mBC.canTransform("b", "/a", ros::Time()));
+  EXPECT_FALSE(mBC.canTransform("/b", "a", tf2::TimePoint()));
+  EXPECT_FALSE(mBC.canTransform("b", "/a", tf2::TimePoint()));
 
 };
 
@@ -1777,7 +1782,7 @@ struct TransformableHelper
   {}
 
   void callback(tf2::TransformableRequestHandle request_handle, const std::string& target_frame, const std::string& source_frame,
-          ros::Time time, tf2::TransformableResult result)
+          tf2::TimePoint time, tf2::TransformableResult result)
   {
     called = true;
   }
@@ -1798,7 +1803,7 @@ TEST(BufferCore_transformableCallbacks, alreadyTransformable)
   b.setTransform(t, "me");
 
   tf2::TransformableCallbackHandle cb_handle = b.addTransformableCallback(boost::bind(&TransformableHelper::callback, &h, _1, _2, _3, _4, _5));
-  EXPECT_EQ(b.addTransformableRequest(cb_handle, "a", "b", ros::Time(1)), 0U);
+  EXPECT_EQ(b.addTransformableRequest(cb_handle, "a", "b", tf2::TimePoint(std::chrono::seconds(1))), 0U);
 }
 
 TEST(BufferCore_transformableCallbacks, waitForNewTransform)
@@ -1806,7 +1811,7 @@ TEST(BufferCore_transformableCallbacks, waitForNewTransform)
   tf2::BufferCore b;
   TransformableHelper h;
   tf2::TransformableCallbackHandle cb_handle = b.addTransformableCallback(boost::bind(&TransformableHelper::callback, &h, _1, _2, _3, _4, _5));
-  EXPECT_GT(b.addTransformableRequest(cb_handle, "a", "b", ros::Time(10)), 0U);
+  EXPECT_GT(b.addTransformableRequest(cb_handle, "a", "b", tf2::TimePoint(std::chrono::seconds(10))), 0U);
 
   geometry_msgs::TransformStamped t;
   for (uint32_t i = 1; i <= 10; ++i)
@@ -1833,7 +1838,7 @@ TEST(BufferCore_transformableCallbacks, waitForOldTransform)
   tf2::BufferCore b;
   TransformableHelper h;
   tf2::TransformableCallbackHandle cb_handle = b.addTransformableCallback(boost::bind(&TransformableHelper::callback, &h, _1, _2, _3, _4, _5));
-  EXPECT_GT(b.addTransformableRequest(cb_handle, "a", "b", ros::Time(1)), 0U);
+  EXPECT_GT(b.addTransformableRequest(cb_handle, "a", "b", tf2::TimePoint(std::chrono::seconds(1))), 0U);
 
   geometry_msgs::TransformStamped t;
   for (uint32_t i = 10; i > 0; --i)

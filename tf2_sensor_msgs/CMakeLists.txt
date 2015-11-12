@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tf2_sensor_msgs)
 
+add_definitions(-std=gnu++11)
+
 find_package(catkin REQUIRED COMPONENTS cmake_modules sensor_msgs tf2_ros tf2)
 find_package(Boost COMPONENTS thread REQUIRED)
 find_package(Eigen)

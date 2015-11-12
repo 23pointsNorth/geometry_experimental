@@ -53,7 +53,7 @@ template <>
 inline
   void doTransform(const tf2::Stamped<btVector3>& t_in, tf2::Stamped<btVector3>& t_out, const geometry_msgs::TransformStamped& transform)
   {
-    t_out = tf2::Stamped<btVector3>(transformToBullet(transform) * t_in, transform.header.stamp, transform.header.frame_id);
+    t_out = tf2::Stamped<btVector3>(transformToBullet(transform) * t_in, chrono_from_rostime(transform.header.stamp), transform.header.frame_id);
   }
 
 //convert to vector message
@@ -61,7 +61,7 @@ inline
 geometry_msgs::PointStamped toMsg(const tf2::Stamped<btVector3>& in)
 {
   geometry_msgs::PointStamped msg;
-  msg.header.stamp = in.stamp_;
+  msg.header.stamp = rostime_from_chrono(in.stamp_);
   msg.header.frame_id = in.frame_id_;
   msg.point.x = in[0];
   msg.point.y = in[1];
@@ -72,7 +72,7 @@ geometry_msgs::PointStamped toMsg(const tf2::Stamped<btVector3>& in)
 inline
 void fromMsg(const geometry_msgs::PointStamped& msg, tf2::Stamped<btVector3>& out)
 {
-  out.stamp_ = msg.header.stamp;
+  out.stamp_ = chrono_from_rostime(msg.header.stamp);
   out.frame_id_ = msg.header.frame_id;
   out[0] = msg.point.x;
   out[1] = msg.point.y;
@@ -85,7 +85,7 @@ template <>
 inline
   void doTransform(const tf2::Stamped<btTransform>& t_in, tf2::Stamped<btTransform>& t_out, const geometry_msgs::TransformStamped& transform)
   {
-    t_out = tf2::Stamped<btTransform>(transformToBullet(transform) * t_in, transform.header.stamp, transform.header.frame_id);
+    t_out = tf2::Stamped<btTransform>(transformToBullet(transform) * t_in, chrono_from_rostime(transform.header.stamp), transform.header.frame_id);
   }
 
 

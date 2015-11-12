@@ -324,7 +324,7 @@ public:
       for (; it != end; ++it)
       {
         const std::string& target_frame = *it;
-        tf2::TransformableRequestHandle handle = bc_.addTransformableRequest(callback_handle_, target_frame, frame_id, stamp);
+        tf2::TransformableRequestHandle handle = bc_.addTransformableRequest(callback_handle_, target_frame, frame_id, tf2::chrono_from_rostime(stamp));
         if (handle == 0xffffffffffffffffULL) // never transformable
         {
           messageDropped(evt, filter_failure_reasons::OutTheBack);
@@ -341,7 +341,7 @@ public:
 
         if (!time_tolerance_.isZero())
         {
-          handle = bc_.addTransformableRequest(callback_handle_, target_frame, frame_id, stamp + time_tolerance_);
+          handle = bc_.addTransformableRequest(callback_handle_, target_frame, frame_id, tf2::chrono_from_rostime(stamp + time_tolerance_));
           if (handle == 0xffffffffffffffffULL) // never transformable
           {
             messageDropped(evt, filter_failure_reasons::OutTheBack);
@@ -462,7 +462,7 @@ private:
   }
 
   void transformable(tf2::TransformableRequestHandle request_handle, const std::string& target_frame, const std::string& source_frame,
-                     ros::Time time, tf2::TransformableResult result)
+                     tf2::TimePoint time, tf2::TransformableResult result)
   {
     namespace mt = ros::message_traits;
 
@@ -508,7 +508,7 @@ private:
       for (; it != end; ++it)
       {
         const std::string& target = *it;
-        if (!bc_.canTransform(target, frame_id, stamp))
+        if (!bc_.canTransform(target, frame_id, tf2::chrono_from_rostime(stamp)))
         {
           can_transform = false;
           break;
@@ -516,7 +516,7 @@ private:
 
         if (!time_tolerance_.isZero())
         {
-          if (!bc_.canTransform(target, frame_id, stamp + time_tolerance_))
+          if (!bc_.canTransform(target, frame_id, tf2::chrono_from_rostime(stamp + time_tolerance_)))
           {
             can_transform = false;
             break;

@@ -32,42 +32,13 @@
 #ifndef TF2_TRANSFORM_STORAGE_H
 #define TF2_TRANSFORM_STORAGE_H
 
+#include "time.h"
+
 #include <tf2/LinearMath/Vector3.h>
 #include <tf2/LinearMath/Quaternion.h>
 
-#include <ros/message_forward.h>
-#include <ros/types.h>
-
-#include <chrono>
-#include <iomanip>
-#include <ctime>
-
-namespace geometry_msgs
-{
-ROS_DECLARE_MESSAGE(TransformStamped);
-}
-
 namespace tf2
 {
-
-typedef std::chrono::system_clock::time_point TimePoint;
-typedef std::chrono::system_clock::duration Duration;
-// This is the zero time in ROS
-constexpr TimePoint TimePointZero = TimePoint(Duration::zero());
-
-// Display functions as there is no default display
-// TODO: find a proper way to handle display
-inline std::string displayTimePoint(const TimePoint& stamp)
-{
-  // Below would only work with GCC 5.0 and above
-  //return std::put_time(&stamp, "%c");
-  std::time_t time = std::chrono::system_clock::to_time_t(stamp);
-  return std::ctime(&time);
-}
-inline double displayDuration(const Duration& duration)
-{
-  return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-}
 
 typedef uint32_t CompactFrameID;
 

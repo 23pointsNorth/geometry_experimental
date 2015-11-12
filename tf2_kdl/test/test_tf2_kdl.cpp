@@ -41,7 +41,7 @@ static const double EPS = 1e-3;
 
 TEST(TfKDL, Frame)
 {
-  tf2::Stamped<KDL::Frame> v1(KDL::Frame(KDL::Rotation::RPY(M_PI, 0, 0), KDL::Vector(1,2,3)), ros::Time(2.0), "A");
+  tf2::Stamped<KDL::Frame> v1(KDL::Frame(KDL::Rotation::RPY(M_PI, 0, 0), KDL::Vector(1,2,3)), tf2::TimePoint(std::chrono::seconds(2)), "A");
 
 
   // simple api
@@ -73,7 +73,7 @@ TEST(TfKDL, Frame)
 
 TEST(TfKDL, Vector)
 {
-  tf2::Stamped<KDL::Vector> v1(KDL::Vector(1,2,3), ros::Time(2.0), "A");
+  tf2::Stamped<KDL::Vector> v1(KDL::Vector(1,2,3), tf2::TimePoint(std::chrono::seconds(2)), "A");
 
 
   // simple api
@@ -92,14 +92,14 @@ TEST(TfKDL, Vector)
 
 TEST(TfKDL, ConvertVector)
 {
-  tf2::Stamped<KDL::Vector> v(KDL::Vector(1,2,3), ros::Time(), "my_frame");
+  tf2::Stamped<KDL::Vector> v(KDL::Vector(1,2,3), tf2::TimePoint(), "my_frame");
 
   tf2::Stamped<KDL::Vector> v1 = v;
   tf2::convert(v1, v1);
 
   EXPECT_EQ(v, v1);
 
-  tf2::Stamped<KDL::Vector> v2(KDL::Vector(3,4,5), ros::Time(), "my_frame2");
+  tf2::Stamped<KDL::Vector> v2(KDL::Vector(3,4,5), tf2::TimePoint(), "my_frame2");
   tf2::convert(v1, v2);
 
   EXPECT_EQ(v, v2);

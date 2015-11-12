@@ -130,6 +130,20 @@ namespace tf2_ros
   }
 
   bool BufferClient::canTransform(const std::string& target_frame, const std::string& source_frame, 
+        const ros::Time& time) const
+  {
+    try
+    {
+      lookupTransform(target_frame, source_frame, time);
+      return true;
+    }
+    catch(tf2::TransformException& ex)
+    {
+      return false;
+    }
+  }
+
+  bool BufferClient::canTransform(const std::string& target_frame, const std::string& source_frame,
         const ros::Time& time, const ros::Duration timeout, std::string* errstr) const
   {
     try
