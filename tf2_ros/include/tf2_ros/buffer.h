@@ -37,7 +37,8 @@
 #include <tf2_msgs/FrameGraph.h>
 #include <ros/ros.h>
 #include <tf2/convert.h>
-
+// Important to have this header here so that the template specialization takes effect
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace tf2_ros
 {

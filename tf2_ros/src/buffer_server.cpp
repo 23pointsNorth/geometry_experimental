@@ -207,10 +207,10 @@ namespace tf2_ros
 
     //check whether we need to used the advanced or simple api
     if(!goal->advanced)
-      return buffer_.lookupTransform(goal->target_frame, goal->source_frame, tf2::chrono_from_rostime(goal->source_time));
+      return buffer_.lookupTransform<geometry_msgs::TransformStamped>(goal->target_frame, goal->source_frame, tf2::chrono_from_rostime(goal->source_time)).get();
 
-    return buffer_.lookupTransform(goal->target_frame, tf2::chrono_from_rostime(goal->target_time),
-        goal->source_frame, tf2::chrono_from_rostime(goal->source_time), goal->fixed_frame);
+    return buffer_.lookupTransform<geometry_msgs::TransformStamped>(goal->target_frame, tf2::chrono_from_rostime(goal->target_time),
+        goal->source_frame, tf2::chrono_from_rostime(goal->source_time), goal->fixed_frame).get();
   }
 
   void BufferServer::start()

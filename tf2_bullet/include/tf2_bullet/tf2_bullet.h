@@ -35,7 +35,7 @@
 #include <tf2/convert.h>
 #include <LinearMath/btTransform.h>
 #include <geometry_msgs/PointStamped.h>
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 namespace tf2
 {

@@ -35,6 +35,7 @@
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btTransform.h"
 #include "rostest/permuter.h"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 void seed_rand()
 {
@@ -660,7 +661,7 @@ TEST(BufferCore_lookupTransform, i_configuration)
     tf2::BufferCore mBC;
     setupTree(mBC, "i", eval_time, interpolation_space);
 
-    geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+    geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
     //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
     EXPECT_EQ(outpose.header.stamp, tf2::rostime_from_chrono(eval_time));
     EXPECT_EQ(outpose.header.frame_id, source_frame);
@@ -998,7 +999,7 @@ TEST(BufferCore_lookupTransform, one_link_configuration)
     tf2::BufferCore mBC;
     setupTree(mBC, "1", eval_time, interpolation_space);
 
-    geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+    geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
 
     EXPECT_TRUE(check_1_result(outpose, source_frame, target_frame, eval_time, epsilon));
   }
@@ -1045,7 +1046,7 @@ TEST(BufferCore_lookupTransform, v_configuration)
     tf2::BufferCore mBC;
     setupTree(mBC, "v", eval_time, interpolation_space);
 
-    geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+    geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
 
     EXPECT_TRUE(check_v_result(outpose, source_frame, target_frame, eval_time, epsilon));
   }
@@ -1092,7 +1093,7 @@ TEST(BufferCore_lookupTransform, y_configuration)
     tf2::BufferCore mBC;
     setupTree(mBC, "y", eval_time, interpolation_space);
 
-    geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+    geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
 
     EXPECT_TRUE(check_y_result(outpose, source_frame, target_frame, eval_time, epsilon));
   }
@@ -1142,7 +1143,7 @@ TEST(BufferCore_lookupTransform, multi_configuration)
 
     if (mBC.canTransform(source_frame, target_frame, eval_time))
     {
-      geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+      geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
       
       if ((source_frame == "1" || source_frame =="2") && (target_frame =="1" || target_frame == "2"))
         EXPECT_TRUE(check_1_result(outpose, source_frame, target_frame, eval_time, epsilon));
@@ -1275,46 +1276,46 @@ TEST(BufferCore_lookupTransform, compound_xfm_configuration)
     expected_rootc = tb * tc;
 
     // root -> b -> c
-    geometry_msgs::TransformStamped out_rootc = mBC.lookupTransform("root", "c", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_rootc = mBC.lookupTransform<geometry_msgs::TransformStamped>("root", "c", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_rootc, expected_rootc, epsilon);
 
     // root -> b -> c -> d
-    geometry_msgs::TransformStamped out_rootd = mBC.lookupTransform("root", "d", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_rootd = mBC.lookupTransform<geometry_msgs::TransformStamped>("root", "d", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_rootd, expected_rootd, epsilon);
 
     // a <- root -> b
-    geometry_msgs::TransformStamped out_ab = mBC.lookupTransform("a", "b", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_ab = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "b", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_ab, expected_ab, epsilon);
 
-    geometry_msgs::TransformStamped out_ba = mBC.lookupTransform("b", "a", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_ba = mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "a", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_ba, expected_ba, epsilon);
 
     // a <- root -> b -> c
-    geometry_msgs::TransformStamped out_ac = mBC.lookupTransform("a", "c", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_ac = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "c", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_ac, expected_ac, epsilon);
 
-    geometry_msgs::TransformStamped out_ca = mBC.lookupTransform("c", "a", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_ca = mBC.lookupTransform<geometry_msgs::TransformStamped>("c", "a", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_ca, expected_ca, epsilon);
 
     // a <- root -> b -> c -> d
-    geometry_msgs::TransformStamped out_ad = mBC.lookupTransform("a", "d", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_ad = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "d", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_ad, expected_ad, epsilon);
 
-    geometry_msgs::TransformStamped out_da = mBC.lookupTransform("d", "a", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_da = mBC.lookupTransform<geometry_msgs::TransformStamped>("d", "a", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_da, expected_da, epsilon);
 
     // b -> c
-    geometry_msgs::TransformStamped out_cb = mBC.lookupTransform("c", "b", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_cb = mBC.lookupTransform<geometry_msgs::TransformStamped>("c", "b", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_cb, expected_cb, epsilon);
 
-    geometry_msgs::TransformStamped out_bc = mBC.lookupTransform("b", "c", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_bc = mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "c", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_bc, expected_bc, epsilon);
 
     // b -> c -> d
-    geometry_msgs::TransformStamped out_bd = mBC.lookupTransform("b", "d", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_bd = mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "d", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_bd, expected_bd, epsilon);
 
-    geometry_msgs::TransformStamped out_db = mBC.lookupTransform("d", "b", tf2::TimePoint());
+    geometry_msgs::TransformStamped out_db = mBC.lookupTransform<geometry_msgs::TransformStamped>("d", "b", tf2::TimePoint()).get();
     CHECK_TRANSFORMS_NEAR(out_db, expected_db, epsilon);
 }
 
@@ -1388,10 +1389,10 @@ TEST(BufferCore_lookupTransform, helix_configuration)
       double dt  = std::chrono::duration_cast<std::chrono::duration<float> >(t - t0).count();
       double dt2 = std::chrono::duration_cast<std::chrono::duration<float> >(t2 - t0).count();
 
-        geometry_msgs::TransformStamped out_ab = mBC.lookupTransform("a", "b", t);
+        geometry_msgs::TransformStamped out_ab = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "b", t).get();
         EXPECT_NEAR(out_ab.transform.translation.z, vel * dt, epsilon);
 
-        geometry_msgs::TransformStamped out_ac = mBC.lookupTransform("a", "c", t);
+        geometry_msgs::TransformStamped out_ac = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "c", t).get();
         EXPECT_NEAR(out_ac.transform.translation.x, cos(theta * dt), epsilon);
         EXPECT_NEAR(out_ac.transform.translation.y, sin(theta * dt), epsilon);
         EXPECT_NEAR(out_ac.transform.translation.z, vel * dt, 		 epsilon);
@@ -1399,10 +1400,10 @@ TEST(BufferCore_lookupTransform, helix_configuration)
         q.setEuler(0,0,theta*dt);
         CHECK_QUATERNION_NEAR(out_ac.transform.rotation, 0, 0, q.z(), q.w(), epsilon);
 
-        geometry_msgs::TransformStamped out_ad = mBC.lookupTransform("a", "d", t);
+        geometry_msgs::TransformStamped out_ad = mBC.lookupTransform<geometry_msgs::TransformStamped>("a", "d", t).get();
         EXPECT_NEAR(out_ad.transform.translation.z, cos(theta * dt), epsilon);
 
-        geometry_msgs::TransformStamped out_cd = mBC.lookupTransform("c", "d", t2);
+        geometry_msgs::TransformStamped out_cd = mBC.lookupTransform<geometry_msgs::TransformStamped>("c", "d", t2).get();
         EXPECT_NEAR(out_cd.transform.translation.x, -1,           			      epsilon);
         EXPECT_NEAR(out_cd.transform.translation.y,  0,  			              epsilon);
         EXPECT_NEAR(out_cd.transform.translation.z, cos(theta * dt2) - vel * dt2, epsilon);
@@ -1418,7 +1419,7 @@ TEST(BufferCore_lookupTransform, helix_configuration)
       double dt  = std::chrono::duration_cast<std::chrono::duration<float> >(t - t0).count();
       double dt2 = std::chrono::duration_cast<std::chrono::duration<float> >(t2 - t0).count();
 
-        geometry_msgs::TransformStamped out_cd2 = mBC.lookupTransform("c", t, "d", t2, "a");
+        geometry_msgs::TransformStamped out_cd2 = mBC.lookupTransform<geometry_msgs::TransformStamped>("c", t, "d", t2, "a").get();
         EXPECT_NEAR(out_cd2.transform.translation.x, -1,           			      epsilon);
         EXPECT_NEAR(out_cd2.transform.translation.y,  0,  			              epsilon);
         EXPECT_NEAR(out_cd2.transform.translation.z, cos(theta * dt2) - vel * dt, epsilon);
@@ -1478,7 +1479,7 @@ TEST(BufferCore_lookupTransform, ring_45_configuration)
     tf2::BufferCore mBC;
     setupTree(mBC, "ring_45", eval_time, interpolation_space);
 
-    geometry_msgs::TransformStamped outpose = mBC.lookupTransform(source_frame, target_frame, eval_time);
+    geometry_msgs::TransformStamped outpose = mBC.lookupTransform<geometry_msgs::TransformStamped>(source_frame, target_frame, eval_time).get();
 
 
     //printf("source_frame %s target_frame %s time %f\n", source_frame.c_str(), target_frame.c_str(), eval_time.toSec());  
@@ -1700,15 +1701,15 @@ TEST(BufferCore_lookupTransform, invalid_arguments)
   
   setupTree(mBC, "i", tf2::TimePoint(std::chrono::seconds(1)));
   
-  EXPECT_NO_THROW(mBC.lookupTransform("b", "a", tf2::TimePoint()));
+  EXPECT_NO_THROW(mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "a", tf2::TimePoint()).get());
 
   //Empty frame_id
-  EXPECT_THROW(mBC.lookupTransform("", "a", tf2::TimePoint()), tf2::InvalidArgumentException);
-  EXPECT_THROW(mBC.lookupTransform("b", "", tf2::TimePoint()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform<geometry_msgs::TransformStamped>("", "a", tf2::TimePoint()).get(), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "", tf2::TimePoint()).get(), tf2::InvalidArgumentException);
 
   //frame_id with /
-  EXPECT_THROW(mBC.lookupTransform("/b", "a", tf2::TimePoint()), tf2::InvalidArgumentException);
-  EXPECT_THROW(mBC.lookupTransform("b", "/a", tf2::TimePoint()), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform<geometry_msgs::TransformStamped>("/b", "a", tf2::TimePoint()).get(), tf2::InvalidArgumentException);
+  EXPECT_THROW(mBC.lookupTransform<geometry_msgs::TransformStamped>("b", "/a", tf2::TimePoint()).get(), tf2::InvalidArgumentException);
 
 };
 

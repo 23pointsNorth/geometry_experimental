@@ -33,8 +33,6 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include <stdexcept>
 
-#include <geometry_msgs/TransformStamped.h>
-
 #include <cmath>
 
 std::vector<double> values;

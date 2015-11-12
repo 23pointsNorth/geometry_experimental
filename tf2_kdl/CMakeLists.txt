@@ -4,12 +4,13 @@ project(tf2_kdl)
 add_definitions(-std=gnu++11)
 
 find_package(orocos_kdl)
-find_package(catkin REQUIRED COMPONENTS cmake_modules tf2 tf2_ros tf2_msgs)
+find_package(catkin REQUIRED COMPONENTS cmake_modules tf2 tf2_geometry_msgs tf2_ros tf2_msgs)
 
 find_package(Eigen REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS}
+  CATKIN_DEPENDS tf2_geometry_msgs
   DEPENDS Eigen orocos_kdl
 )
 

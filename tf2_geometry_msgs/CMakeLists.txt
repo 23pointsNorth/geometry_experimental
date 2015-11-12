@@ -4,7 +4,7 @@ project(tf2_geometry_msgs)
 add_definitions(-std=gnu++11)
 
 find_package(orocos_kdl)
-find_package(catkin REQUIRED COMPONENTS geometry_msgs tf2_ros tf2)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs tf2)
 find_package(Boost COMPONENTS thread REQUIRED)
 
 # Issue #53
@@ -14,7 +14,7 @@ catkin_package(
    LIBRARIES ${KDL_LIBRARY}
    INCLUDE_DIRS include
    DEPENDS orocos_kdl
-   CATKIN_DEPENDS  geometry_msgs tf2_ros tf2)
+   CATKIN_DEPENDS geometry_msgs tf2)
 
 
 include_directories(include
@@ -31,7 +31,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 catkin_python_setup()
 
-if(CATKIN_ENABLE_TESTING)
+#if(CATKIN_ENABLE_TESTING)
+if(0)
 
 find_package(catkin REQUIRED COMPONENTS geometry_msgs rostest tf2_ros tf2)
 

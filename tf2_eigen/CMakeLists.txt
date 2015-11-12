@@ -1,20 +1,24 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tf2_eigen)
 
+add_definitions(-std=gnu++11)
+
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   geometry_msgs
   tf2
+  tf2_geometry_msgs
 )
 
 find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
-include_directories(include)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 catkin_package(
   INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
+  CATKIN_DEPENDS tf2 tf2_geometry_msgs
   DEPENDS eigen)
 
 install(DIRECTORY include/${PROJECT_NAME}/

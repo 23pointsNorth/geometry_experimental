@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosgraph
   rospy
   tf2
+  tf2_geometry_msgs
   tf2_msgs
   ${TF2_PY}
 )
@@ -34,6 +35,7 @@ catkin_package(
   roscpp
   rosgraph
   tf2
+  tf2_geometry_msgs
   tf2_msgs
   ${TF2_PY}
 )

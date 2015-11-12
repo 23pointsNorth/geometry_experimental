@@ -4,14 +4,13 @@ project(tf2)
 add_definitions(-std=gnu++11)
 
 find_package(console_bridge REQUIRED)
-find_package(catkin REQUIRED COMPONENTS geometry_msgs)
+find_package(catkin REQUIRED)
 find_package(Boost REQUIRED COMPONENTS signals system thread)
 
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES tf2
-   DEPENDS console_bridge
-   CATKIN_DEPENDS geometry_msgs)
+   DEPENDS console_bridge)
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${console_bridge_INCLUDE_DIRS})
 include_directories (src/bt)
@@ -19,7 +18,7 @@ include_directories (src/bt)
 # export user definitions
 
 #CPP Libraries
-add_library(tf2 src/cache.cpp src/buffer_core.cpp src/static_cache.cpp)
+add_library(tf2 src/cache.cpp src/buffer_core.cpp src/convert.cpp src/static_cache.cpp)
 target_link_libraries(tf2 ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${console_bridge_LIBRARIES})
 
 install(TARGETS tf2

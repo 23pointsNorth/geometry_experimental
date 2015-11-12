@@ -46,6 +46,105 @@
 namespace tf2
 {
 
+// Time conversions between ROS and tf2
+inline tf2::TimePoint chrono_from_rostime(const ros::Time& time)
+{
+  return tf2::TimePoint(std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec));
+}
+
+inline tf2::Duration chrono_from_rostime(const ros::Duration& time)
+{
+  return std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec);
+}
+
+inline ros::Time rostime_from_chrono(const tf2::TimePoint& time)
+{
+  ros::Time res;
+  res.sec = std::chrono::time_point_cast<std::chrono::seconds>(time).time_since_epoch().count();
+  res.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time).time_since_epoch().count() - res.sec*1e9;
+
+  return res;
+}
+
+inline ros::Duration rostime_from_chrono(const tf2::Duration& time)
+{
+  ros::Duration res;
+  res.sec = std::chrono::duration_cast<std::chrono::seconds>(time).count();
+  res.nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(time).count() - res.sec*1e9;
+
+  return res;
+}
+
+inline tf2::TimePoint chrono_from_double(double time)
+{
+  ros::Time tmp;
+  tmp.fromSec(time);
+  return chrono_from_rostime(tmp);
+}
+
+// Specialization of TransformProxy for geometry_msgs::TransformStamped
+template <>
+inline TimePoint tf2::TransformProxy<geometry_msgs::TransformStamped>::getTime() const
+{
+  return chrono_from_rostime(t_.header.stamp);
+};
+template <>
+inline void tf2::TransformProxy<geometry_msgs::TransformStamped>::setTime(const TimePoint &time)
+{
+  t_.header.stamp = rostime_from_chrono(time);
+};
+
+template <>
+inline std::string tf2::TransformProxy<geometry_msgs::TransformStamped>::getFrameId() const
+{
+  return t_.header.frame_id;
+};
+template <>
+inline void tf2::TransformProxy<geometry_msgs::TransformStamped>::setFrameId(const std::string &frame_id)
+{
+  t_.header.frame_id = frame_id;
+};
+
+template <>
+inline std::string tf2::TransformProxy<geometry_msgs::TransformStamped>::getChildFrameId() const
+{
+  return t_.child_frame_id;
+};
+template <>
+inline void tf2::TransformProxy<geometry_msgs::TransformStamped>::setChildFrameId(const std::string &child_frame_id)
+{
+  t_.child_frame_id = child_frame_id;
+};
+
+template <>
+inline void tf2::TransformProxy<geometry_msgs::TransformStamped>::getTransform(double &qx, double &qy, double &qz,
+                                                                               double &qw, double &x, double &y,
+                                                                               double &z) const
+{
+  qx = t_.transform.rotation.x;
+  qy = t_.transform.rotation.y;
+  qz = t_.transform.rotation.z;
+  qw = t_.transform.rotation.w;
+  x = t_.transform.translation.x;
+  y = t_.transform.translation.y;
+  z = t_.transform.translation.z;
+}
+
+template <>
+inline void tf2::TransformProxy<geometry_msgs::TransformStamped>::setTransform(double qx, double qy, double qz,
+                                                                               double qw, double x, double y,
+                                                                               double z)
+{
+  t_.transform.rotation.x = qx;
+  t_.transform.rotation.y = qy;
+  t_.transform.rotation.z = qz;
+  t_.transform.rotation.w = qw;
+  t_.transform.translation.x = x;
+  t_.transform.translation.y = y;
+  t_.transform.translation.z = z;
+}
+
+
 inline
 KDL::Frame gmTransformToKDL(const geometry_msgs::TransformStamped& t)
   {

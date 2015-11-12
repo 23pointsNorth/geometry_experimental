@@ -33,6 +33,7 @@
 #define TF2_ROS_MESSAGE_FILTER_H
 
 #include <tf2/buffer_core.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <string>
 #include <list>

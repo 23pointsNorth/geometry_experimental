@@ -32,8 +32,6 @@
 #include <sys/time.h>
 #include <stdexcept>
 
-#include <geometry_msgs/TransformStamped.h>
-
 #include <cmath>
 
 using namespace tf2;

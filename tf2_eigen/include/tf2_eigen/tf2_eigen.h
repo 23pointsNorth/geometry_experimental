@@ -33,6 +33,7 @@
 #include <Eigen/Geometry>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 
 namespace tf2
@@ -51,7 +52,7 @@ void doTransform(const tf2::Stamped<Eigen::Vector3d>& t_in,
 		 tf2::Stamped<Eigen::Vector3d>& t_out,
 		 const geometry_msgs::TransformStamped& transform) {
   t_out = tf2::Stamped<Eigen::Vector3d>(transformToEigen(transform) * t_in,
-					transform.header.stamp, 
+					chrono_from_rostime(transform.header.stamp),
 					transform.header.frame_id);
 }
 
@@ -59,7 +60,7 @@ void doTransform(const tf2::Stamped<Eigen::Vector3d>& t_in,
 geometry_msgs::PointStamped toMsg(const tf2::Stamped<Eigen::Vector3d>& in)
 {
   geometry_msgs::PointStamped msg;
-  msg.header.stamp = in.stamp_;
+  msg.header.stamp = rostime_from_chrono(in.stamp_);
   msg.header.frame_id = in.frame_id_;
   msg.point.x = in.x();
   msg.point.y = in.y();
@@ -68,7 +69,7 @@ geometry_msgs::PointStamped toMsg(const tf2::Stamped<Eigen::Vector3d>& in)
 }
 
 void fromMsg(const geometry_msgs::PointStamped& msg, tf2::Stamped<Eigen::Vector3d>& out) {
-  out.stamp_ = msg.header.stamp;
+  out.stamp_ = chrono_from_rostime(msg.header.stamp);
   out.frame_id_ = msg.header.frame_id;
   out.x() = msg.point.x;
   out.y() = msg.point.y;
@@ -81,14 +82,15 @@ template <>
 void doTransform(const tf2::Stamped<Eigen::Affine3d>& t_in,
 		 tf2::Stamped<Eigen::Affine3d>& t_out,
 		 const geometry_msgs::TransformStamped& transform) {
-  t_out = tf2::Stamped<Eigen::Affine3d>(transformToEigen(transform) * t_in, transform.header.stamp, transform.header.frame_id);
+  t_out = tf2::Stamped<Eigen::Affine3d>(transformToEigen(transform) * t_in, chrono_from_rostime(transform.header.stamp),
+                                        transform.header.frame_id);
 }
 
 //convert to pose message
 geometry_msgs::PoseStamped toMsg(const tf2::Stamped<Eigen::Affine3d>& in)
 {
   geometry_msgs::PoseStamped msg;
-  msg.header.stamp = in.stamp_;
+  msg.header.stamp = rostime_from_chrono(in.stamp_);
   msg.header.frame_id = in.frame_id_;
   msg.pose.position.x = in.translation().x();
   msg.pose.position.y = in.translation().y();
@@ -102,7 +104,7 @@ geometry_msgs::PoseStamped toMsg(const tf2::Stamped<Eigen::Affine3d>& in)
 
 void fromMsg(const geometry_msgs::PoseStamped& msg, tf2::Stamped<Eigen::Affine3d>& out)
 {
-  out.stamp_ = msg.header.stamp;
+  out.stamp_ = chrono_from_rostime(msg.header.stamp);
   out.frame_id_ = msg.header.frame_id;
   out.setData(Eigen::Affine3d(Eigen::Translation3d(msg.pose.position.x, msg.pose.position.y, msg.pose.position.z)
 			       * Eigen::Quaterniond(msg.pose.orientation.w, 

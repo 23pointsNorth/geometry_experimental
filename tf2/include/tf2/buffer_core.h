@@ -42,7 +42,6 @@
 #include <string>
 
 //#include "geometry_msgs/TwistStamped.h"
-#include "geometry_msgs/TransformStamped.h"
 
 //////////////////////////backwards startup for porting
 //#include "tf/tf.h"
@@ -112,18 +111,31 @@ public:
    * \param is_static Record this transform as a static transform.  It will be good across all time.  (This cannot be changed after the first call.)
    * \return True unless an error occured
    */
-  bool setTransform(const geometry_msgs::TransformStamped& transform, const std::string & authority, bool is_static = false)
+  template <typename T>
+  bool setTransform(const T& transform, const std::string & authority, bool is_static = false)
   {
-    tf2::Transform tf2_transform(tf2::Quaternion(transform.transform.rotation.x,
-                                                 transform.transform.rotation.y,
-                                                 transform.transform.rotation.z,
-                                                 transform.transform.rotation.w),
-                                 tf2::Vector3(transform.transform.translation.x,
-                                              transform.transform.translation.y,
-                                              transform.transform.translation.z));
+    TransformProxy<T> proxy(transform);
 
-    return setTransformImpl(tf2_transform, transform.header.frame_id, transform.child_frame_id,
-                            tf2::chrono_from_rostime(transform.header.stamp), authority, is_static);
+    return setTransformImpl(proxy.getTf2Transform(), proxy.getFrameId(), proxy.getChildFrameId(),
+                            proxy.getTime(), authority, is_static);
+  }
+
+  /** \brief Add transform information to the tf data structure
+   * \param transform The transform to store
+   * \param frame_id The frame to which data should be transformed
+   * \param child_frame_id The frame where the data originated
+   * \param time time at which the transform happens
+   * \param authority The source of the information for this transform
+   * \param is_static Record this transform as a static transform.  It will be good across all time.  (This cannot be changed after the first call.)
+   * \return True unless an error occured
+   */
+  template <typename T>
+  bool setTransform(const T& transform, const TimePoint &time, const std::string &frame_id,
+                    const std::string &child_frame_id, const std::string & authority, bool is_static = false)
+  {
+    TransformProxy<T> proxy(transform);
+
+    return setTransformImpl(proxy.getTf2Transform(), frame_id, child_frame_id, time, authority, is_static);
   }
 
   /*********** Accessors *************/
@@ -137,26 +149,23 @@ public:
    * Possible exceptions tf2::LookupException, tf2::ConnectivityException,
    * tf2::ExtrapolationException, tf2::InvalidArgumentException
    */
-  geometry_msgs::TransformStamped 
+  template <typename T>
+  TransformProxy<T>
     lookupTransform(const std::string& target_frame, const std::string& source_frame,
 		    const TimePoint& time) const
   {
     tf2::Transform transform;
     TimePoint time_out;
     lookupTransformImpl(target_frame, source_frame, time, transform, time_out);
-    geometry_msgs::TransformStamped msg;
-    msg.transform.translation.x = transform.getOrigin().x();
-    msg.transform.translation.y = transform.getOrigin().y();
-    msg.transform.translation.z = transform.getOrigin().z();
-    msg.transform.rotation.x = transform.getRotation().x();
-    msg.transform.rotation.y = transform.getRotation().y();
-    msg.transform.rotation.z = transform.getRotation().z();
-    msg.transform.rotation.w = transform.getRotation().w();
-    msg.header.stamp = tf2::rostime_from_chrono(time_out);
-    msg.header.frame_id = target_frame;
-    msg.child_frame_id = source_frame;
 
-    return msg;
+    TransformProxy<T> proxy;
+    proxy.setTime(time_out);
+    proxy.setFrameId(target_frame);
+    proxy.setChildFrameId(source_frame);
+
+    proxy.setTf2Transform(transform);
+
+    return proxy;
   }
 
   /** \brief Get the transform between two frames by frame ID assuming fixed frame.
@@ -170,8 +179,8 @@ public:
    * Possible exceptions tf2::LookupException, tf2::ConnectivityException,
    * tf2::ExtrapolationException, tf2::InvalidArgumentException
    */
-
-  geometry_msgs::TransformStamped
+  template <typename T>
+  TransformProxy<T>
     lookupTransform(const std::string& target_frame, const TimePoint& target_time,
 		    const std::string& source_frame, const TimePoint& source_time,
 		    const std::string& fixed_frame) const
@@ -180,19 +189,15 @@ public:
     TimePoint time_out;
     lookupTransformImpl(target_frame, target_time, source_frame, source_time,
                         fixed_frame, transform, time_out);
-    geometry_msgs::TransformStamped msg;
-    msg.transform.translation.x = transform.getOrigin().x();
-    msg.transform.translation.y = transform.getOrigin().y();
-    msg.transform.translation.z = transform.getOrigin().z();
-    msg.transform.rotation.x = transform.getRotation().x();
-    msg.transform.rotation.y = transform.getRotation().y();
-    msg.transform.rotation.z = transform.getRotation().z();
-    msg.transform.rotation.w = transform.getRotation().w();
-    msg.header.stamp = tf2::rostime_from_chrono(time_out);
-    msg.header.frame_id = target_frame;
-    msg.child_frame_id = source_frame;
 
-    return msg;
+    TransformProxy<T> proxy;
+    proxy.setTime(time_out);
+    proxy.setFrameId(target_frame);
+    proxy.setChildFrameId(source_frame);
+
+    proxy.setTf2Transform(transform);
+
+    return proxy;
   }
 
   /** \brief Lookup the twist of the tracking_frame with respect to the observation frame in the reference_frame using the reference point

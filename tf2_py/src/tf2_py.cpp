@@ -316,7 +316,7 @@ static PyObject *lookupTransformCore(PyObject *self, PyObject *args, PyObject *k
   if (!PyArg_ParseTupleAndKeywords(args, kw, "ssO&", (char**)keywords, &target_frame, &source_frame, chrono_converter, &time))
     return NULL;
   geometry_msgs::TransformStamped transform;
-  WRAP(transform = bc->lookupTransform(target_frame, source_frame, time));
+  WRAP(transform = bc->lookupTransform<geometry_msgs::TransformStamped>(target_frame, source_frame, time).get());
   geometry_msgs::Vector3 origin = transform.transform.translation;
   geometry_msgs::Quaternion rotation = transform.transform.rotation;
   //TODO: Create a converter that will actually return a python message
@@ -343,7 +343,7 @@ static PyObject *lookupTransformFullCore(PyObject *self, PyObject *args, PyObjec
                         &fixed_frame))
     return NULL;
   geometry_msgs::TransformStamped transform;
-  WRAP(transform = bc->lookupTransform(target_frame, target_time, source_frame, source_time, fixed_frame));
+  WRAP(transform = bc->lookupTransform<geometry_msgs::TransformStamped>(target_frame, target_time, source_frame, source_time, fixed_frame).get());
   geometry_msgs::Vector3 origin = transform.transform.translation;
   geometry_msgs::Quaternion rotation = transform.transform.rotation;
   //TODO: Create a converter that will actually return a python message

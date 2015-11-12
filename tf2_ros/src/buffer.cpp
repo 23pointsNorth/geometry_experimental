@@ -35,6 +35,8 @@
 #include <ros/assert.h>
 #include <sstream>
 
+template class tf2::TransformProxy<geometry_msgs::TransformStamped>;
+
 namespace tf2_ros
 {
 
@@ -53,7 +55,7 @@ Buffer::lookupTransform(const std::string& target_frame, const std::string& sour
                         const ros::Time& time, const ros::Duration timeout) const
 {
   canTransform(target_frame, source_frame, time, timeout);
-  return lookupTransform(target_frame, source_frame, tf2::chrono_from_rostime(time));
+  return lookupTransform<geometry_msgs::TransformStamped>(target_frame, source_frame, tf2::chrono_from_rostime(time)).get();
 }
 
 
@@ -63,7 +65,8 @@ Buffer::lookupTransform(const std::string& target_frame, const ros::Time& target
                         const std::string& fixed_frame, const ros::Duration timeout) const
 {
   canTransform(target_frame, target_time, source_frame, source_time, fixed_frame, timeout);
-  return lookupTransform(target_frame, tf2::chrono_from_rostime(target_time), source_frame, tf2::chrono_from_rostime(source_time), fixed_frame);
+  return lookupTransform<geometry_msgs::TransformStamped>(target_frame, tf2::chrono_from_rostime(target_time),
+                                                          source_frame, tf2::chrono_from_rostime(source_time), fixed_frame).get();
 }
 
 /** This is a workaround for the case that we're running inside of
