@@ -30,7 +30,8 @@
 #ifndef TF2_SENSOR_MSGS_H
 #define TF2_SENSOR_MSGS_H
 
-#include <tf2/convert.h>
+#include <tf2_ros_utils/convert.h>
+#include <tf2_ros_utils/time.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <Eigen/Eigen>

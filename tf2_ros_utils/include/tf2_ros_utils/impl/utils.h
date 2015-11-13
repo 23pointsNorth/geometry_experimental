@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TF2_IMPL_UTILS_H
-#define TF2_IMPL_UTILS_H
+#ifndef TF2_ROS_UTILS_IMPL_UTILS_H
+#define TF2_ROS_UTILS_IMPL_UTILS_H
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/transform_datatypes.h>
@@ -150,4 +150,4 @@ double getYaw(const tf2::Quaternion& q)
 }
 }
 
-#endif //TF2_IMPL_UTILS_H
+#endif //TF2_ROS_UTILS_IMPL_UTILS_H

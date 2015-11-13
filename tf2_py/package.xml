@@ -40,6 +40,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>tf2</build_depend>
   <build_depend>rospy</build_depend>
+  <build_depend>tf2_ros_utils</build_depend>
+
   <run_depend>tf2</run_depend>
   <run_depend>rospy</run_depend>
 

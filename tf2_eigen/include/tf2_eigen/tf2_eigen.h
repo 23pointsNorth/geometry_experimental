@@ -29,11 +29,11 @@
 #ifndef TF2_EIGEN_H
 #define TF2_EIGEN_H
 
-#include <tf2/convert.h>
 #include <Eigen/Geometry>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros_utils/convert.h>
+#include <tf2_ros_utils/time.h>
 
 
 namespace tf2

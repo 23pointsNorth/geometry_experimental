@@ -27,8 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TF2_IMPL_CONVERT_H
-#define TF2_IMPL_CONVERT_H
+#ifndef TF2_ROS_UTILS_IMPL_CONVERT_H
+#define TF2_ROS_UTILS_IMPL_CONVERT_H
 
 namespace tf2 {
 namespace impl {
@@ -75,4 +75,4 @@ inline void Converter<false, false>::convert(const A& a, B& b)
 }
 }
 
-#endif //TF2_IMPL_CONVERT_H
+#endif //TF2_ROS_UTILS_IMPL_CONVERT_H

@@ -38,7 +38,8 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sstream>
 #include <tf2/convert.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros_utils/convert.h>
+#include <tf2_ros_utils/time.h>
 
 namespace tf2_ros
 {

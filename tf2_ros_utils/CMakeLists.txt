@@ -1,46 +1,19 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(tf2_ros)
+project(tf2_ros_utils)
 
 add_definitions(-std=gnu++11)
 
-if(NOT ANDROID)
-set(TF2_PY tf2_py)
-endif()
-
-find_package(catkin REQUIRED COMPONENTS
-  actionlib
-  actionlib_msgs
-  geometry_msgs
-  message_filters
-  roscpp
-  rosgraph
-  rospy
-  tf2
-  tf2_geometry_msgs
-  tf2_msgs
-  tf2_ros_utils
-  ${TF2_PY}
-)
-find_package(Boost REQUIRED COMPONENTS thread)
-
-catkin_python_setup()
+find_package(catkin REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS
-  actionlib
-  actionlib_msgs
   geometry_msgs
-  message_filters
-  roscpp
-  rosgraph
+  rostime
   tf2
-  tf2_geometry_msgs
-  tf2_msgs
-  tf2_ros_utils
-  ${TF2_PY}
 )
+
+return()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -132,14 +105,9 @@ target_link_libraries(${PROJECT_NAME}_test_time_reset
   ${GTEST_LIBRARIES}
 )
 
-add_executable(${PROJECT_NAME}_test_geometry_msgs EXCLUDE_FROM_ALL test/test_tf2_geometry_msgs.cpp)
-target_link_libraries(${PROJECT_NAME}_test_geometry_msgs ${catkin_LIBRARIES} ${PROJECT_NAME} ${GTEST_LIBRARIES} ${orocos_kdl_LIBRARIES})
-
 add_dependencies(tests ${PROJECT_NAME}_test_listener)
 add_dependencies(tests ${PROJECT_NAME}_test_time_reset)
-add_dependencies(tests ${PROJECT_NAME}_test_geometry_msgs)
 
-add_rostest(test/test.launch)
 add_rostest(test/transform_listener_unittest.launch)
 add_rostest(test/transform_listener_time_reset_test.launch)
 

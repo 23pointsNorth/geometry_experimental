@@ -35,6 +35,8 @@
 #include <tf2/convert.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
+#include <tf2_ros_utils/convert.h>
+#include <tf2_ros_utils/time.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -45,42 +47,6 @@
 
 namespace tf2
 {
-
-// Time conversions between ROS and tf2
-inline tf2::TimePoint chrono_from_rostime(const ros::Time& time)
-{
-  return tf2::TimePoint(std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec));
-}
-
-inline tf2::Duration chrono_from_rostime(const ros::Duration& time)
-{
-  return std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec);
-}
-
-inline ros::Time rostime_from_chrono(const tf2::TimePoint& time)
-{
-  ros::Time res;
-  res.sec = std::chrono::time_point_cast<std::chrono::seconds>(time).time_since_epoch().count();
-  res.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time).time_since_epoch().count() - res.sec*1e9;
-
-  return res;
-}
-
-inline ros::Duration rostime_from_chrono(const tf2::Duration& time)
-{
-  ros::Duration res;
-  res.sec = std::chrono::duration_cast<std::chrono::seconds>(time).count();
-  res.nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(time).count() - res.sec*1e9;
-
-  return res;
-}
-
-inline tf2::TimePoint chrono_from_double(double time)
-{
-  ros::Time tmp;
-  tmp.fromSec(time);
-  return chrono_from_rostime(tmp);
-}
 
 // Specialization of TransformProxy for geometry_msgs::TransformStamped
 template <>

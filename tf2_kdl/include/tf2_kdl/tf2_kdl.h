@@ -32,13 +32,13 @@
 #ifndef TF2_KDL_H
 #define TF2_KDL_H
 
-#include <tf2/convert.h>
 #include <kdl/frames.hpp>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros_utils/convert.h>
+#include <tf2_ros_utils/time.h>
 
 
 namespace tf2

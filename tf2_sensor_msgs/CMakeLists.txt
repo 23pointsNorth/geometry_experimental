@@ -3,19 +3,13 @@ project(tf2_sensor_msgs)
 
 add_definitions(-std=gnu++11)
 
-find_package(catkin REQUIRED COMPONENTS cmake_modules sensor_msgs tf2)
-find_package(Boost COMPONENTS thread REQUIRED)
+find_package(catkin REQUIRED COMPONENTS cmake_modules)
 find_package(Eigen)
 
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS sensor_msgs tf2
+   CATKIN_DEPENDS sensor_msgs tf2_ros_utils
    DEPENDS Eigen
-)
-
-
-include_directories(include
-   ${catkin_INCLUDE_DIRS}
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -24,12 +18,11 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 catkin_python_setup()
 
-#if(CATKIN_ENABLE_TESTING)
-if(0)
+if(CATKIN_ENABLE_TESTING)
 
-find_package(catkin REQUIRED COMPONENTS sensor_msgs rostest tf2_ros tf2)
+find_package(catkin REQUIRED COMPONENTS rostest sensor_msgs tf2_ros tf2_ros_utils)
 
-include_directories(${EIGEN_INCLUDE_DIRS})
+include_directories(include ${EIGEN_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_executable(test_tf2_sensor_msgs_cpp EXCLUDE_FROM_ALL test/test_tf2_sensor_msgs.cpp)
 target_link_libraries(test_tf2_sensor_msgs_cpp ${catkin_LIBRARIES} ${GTEST_LIBRARIES})

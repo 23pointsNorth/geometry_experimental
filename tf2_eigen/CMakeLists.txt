@@ -5,20 +5,13 @@ add_definitions(-std=gnu++11)
 
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
-  geometry_msgs
-  tf2
-  tf2_geometry_msgs
 )
 
 find_package(Eigen REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
-add_definitions(${EIGEN_DEFINITIONS})
-
-include_directories(include ${catkin_INCLUDE_DIRS})
 
 catkin_package(
   INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
-  CATKIN_DEPENDS tf2 tf2_geometry_msgs
+  CATKIN_DEPENDS geometry_msgs tf2_ros_utils
   DEPENDS eigen)
 
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -26,6 +19,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(catkin REQUIRED COMPONENTS tf2 tf2_ros_utils)
+  include_directories(include ${EIGEN_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+  add_definitions(${EIGEN_DEFINITIONS})
 
   catkin_add_gtest(tf2_eigen-test test/tf2_eigen-test.cpp)
   target_link_libraries(tf2_eigen-test ${catkin_LIBRARIES} ${GTEST_LIBRARIES})

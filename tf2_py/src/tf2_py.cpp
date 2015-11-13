@@ -1,28 +1,9 @@
 #include <Python.h>
 
+#include <geometry_msgs/TransformStamped.h>
 #include <tf2/buffer_core.h>
 #include <tf2/exceptions.h>
-
-tf2::TimePoint chrono_from_rostime(const ros::Time& time)
-{
-  return tf2::TimePoint(std::chrono::seconds(time.sec) + std::chrono::nanoseconds(time.nsec));
-}
-
-tf2::TimePoint chrono_from_double(double time)
-{
-  ros::Time tmp;
-  tmp.fromSec(time);
-  return chrono_from_rostime(tmp);
-}
-
-ros::Time rostime_from_chrono(const tf2::TimePoint& time)
-{
-  ros::Time res;
-  res.sec = std::chrono::time_point_cast<std::chrono::seconds>(time).time_since_epoch().count();
-  res.nsec = std::chrono::time_point_cast<std::chrono::nanoseconds>(time).time_since_epoch().count() - res.sec*1e9;
-
-  return res;
-}
+#include <tf2_ros_utils/time.h>
 
 // Run x (a tf method, catching TF's exceptions and reraising them as Python exceptions)
 //
@@ -159,7 +140,7 @@ static int chrono_converter(PyObject *obj, tf2::TimePoint *rt)
     PyErr_SetString(PyExc_TypeError, "time must have a to_sec method, e.g. rospy.Time or rospy.Duration");
     return 0;
   } else {
-    *rt = chrono_from_double(PyFloat_AsDouble(tsr));
+    *rt = tf2::chrono_from_double(PyFloat_AsDouble(tsr));
     Py_DECREF(tsr);
     return 1;
   }
@@ -410,7 +391,7 @@ static PyObject *setTransform(PyObject *self, PyObject *args)
   tf2::TimePoint time;
   if (chrono_converter(PyObject_BorrowAttrString(header, "stamp"), &time) != 1)
     return NULL;
-  transform.header.stamp = rostime_from_chrono(time);
+  transform.header.stamp = tf2::rostime_from_chrono(time);
 
   PyObject *mtransform = PyObject_BorrowAttrString(py_transform, "transform");
   PyObject *translation = PyObject_BorrowAttrString(mtransform, "translation");
@@ -443,7 +424,7 @@ static PyObject *setTransformStatic(PyObject *self, PyObject *args)
   tf2::TimePoint time;
   if (chrono_converter(PyObject_BorrowAttrString(header, "stamp"), &time) != 1)
     return NULL;
-  transform.header.stamp = rostime_from_chrono(time);
+  transform.header.stamp = tf2::rostime_from_chrono(time);
 
   PyObject *mtransform = PyObject_BorrowAttrString(py_transform, "transform");
   PyObject *translation = PyObject_BorrowAttrString(mtransform, "translation");

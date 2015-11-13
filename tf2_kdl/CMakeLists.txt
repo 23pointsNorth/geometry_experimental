@@ -4,22 +4,18 @@ project(tf2_kdl)
 add_definitions(-std=gnu++11)
 
 find_package(orocos_kdl)
-find_package(catkin REQUIRED COMPONENTS cmake_modules tf2 tf2_geometry_msgs tf2_ros tf2_msgs)
+find_package(catkin REQUIRED COMPONENTS cmake_modules)
 
 find_package(Eigen REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS}
-  CATKIN_DEPENDS tf2_geometry_msgs
+  CATKIN_DEPENDS geometry_msgs tf2_ros_utils
   DEPENDS Eigen orocos_kdl
 )
 
 
 catkin_python_setup()
-link_directories(${orocos_kdl_LIBRARY_DIRS})
-
-include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS})
-
 
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
@@ -31,7 +27,10 @@ install(PROGRAMS scripts/test.py
 
 if(CATKIN_ENABLE_TESTING)
 
-find_package(catkin REQUIRED COMPONENTS rostest tf2 tf2_ros tf2_msgs)
+find_package(catkin REQUIRED COMPONENTS rostest tf2 tf2_msgs tf2_ros tf2_ros_utils)
+
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS})
 
 add_executable(test_kdl EXCLUDE_FROM_ALL test/test_tf2_kdl.cpp)
 find_package (Threads)

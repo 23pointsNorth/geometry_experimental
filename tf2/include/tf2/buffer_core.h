@@ -37,6 +37,8 @@
 #include "LinearMath/Transform.h"
 #include "transform_storage.h"
 
+#include <tf2/exceptions.h>
+
 #include <boost/signals2.hpp>
 
 #include <string>

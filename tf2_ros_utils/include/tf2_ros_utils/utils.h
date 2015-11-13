@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TF2_UTILS_H
-#define TF2_UTILS_H
+#ifndef TF2_ROS_UTILS_UTILS_H
+#define TF2_ROS_UTILS_UTILS_H
 
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2/impl/utils.h>
+#include <tf2_ros_utils/impl/utils.h>
 
 namespace tf2 {
 /** Return the yaw, pitch, roll of anything that can be converted to a tf2::Quaternion
@@ -63,4 +63,4 @@ template <class A>
 
 }
 
-#endif //TF2_UTILS_H
+#endif //TF2_ROS_UTILS_UTILS_H

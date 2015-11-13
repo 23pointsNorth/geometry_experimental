@@ -14,7 +14,7 @@ catkin_package(
    LIBRARIES ${KDL_LIBRARY}
    INCLUDE_DIRS include
    DEPENDS orocos_kdl
-   CATKIN_DEPENDS geometry_msgs tf2)
+   CATKIN_DEPENDS geometry_msgs tf2 tf2_ros_utils)
 
 
 include_directories(include
