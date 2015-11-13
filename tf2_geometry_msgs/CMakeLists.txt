@@ -4,7 +4,7 @@ project(tf2_geometry_msgs)
 add_definitions(-std=gnu++11)
 
 find_package(orocos_kdl)
-find_package(catkin REQUIRED COMPONENTS geometry_msgs tf2)
+find_package(catkin REQUIRED)
 find_package(Boost COMPONENTS thread REQUIRED)
 
 # Issue #53
@@ -30,20 +30,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 catkin_python_setup()
-
-#if(CATKIN_ENABLE_TESTING)
-if(0)
-
-find_package(catkin REQUIRED COMPONENTS geometry_msgs rostest tf2_ros tf2)
-
-add_executable(test_geometry_msgs EXCLUDE_FROM_ALL test/test_tf2_geometry_msgs.cpp)
-target_link_libraries(test_geometry_msgs ${catkin_LIBRARIES} ${GTEST_LIBRARIES} ${orocos_kdl_LIBRARIES})
-add_rostest(${CMAKE_CURRENT_SOURCE_DIR}/test/test.launch)
-
-
-if(TARGET tests)
-  add_dependencies(tests test_geometry_msgs)
-endif()
-
-
-endif()

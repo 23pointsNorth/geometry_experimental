@@ -130,9 +130,14 @@ target_link_libraries(${PROJECT_NAME}_test_time_reset
   ${GTEST_LIBRARIES}
 )
 
+add_executable(${PROJECT_NAME}_test_geometry_msgs EXCLUDE_FROM_ALL test/test_tf2_geometry_msgs.cpp)
+target_link_libraries(${PROJECT_NAME}_test_geometry_msgs ${catkin_LIBRARIES} ${PROJECT_NAME} ${GTEST_LIBRARIES} ${orocos_kdl_LIBRARIES})
+
 add_dependencies(tests ${PROJECT_NAME}_test_listener)
 add_dependencies(tests ${PROJECT_NAME}_test_time_reset)
+add_dependencies(tests ${PROJECT_NAME}_test_geometry_msgs)
 
+add_rostest(test/test.launch)
 add_rostest(test/transform_listener_unittest.launch)
 add_rostest(test/transform_listener_time_reset_test.launch)
 

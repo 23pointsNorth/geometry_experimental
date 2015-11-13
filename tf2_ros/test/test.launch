@@ -1,0 +1,3 @@
+<launch>
+  <test test-name="test_tf2_geometry_msgs" pkg="tf2_ros" type="tf2_ros_test_geometry_msgs" time-limit="120" />
+</launch>
